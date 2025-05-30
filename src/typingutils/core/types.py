@@ -1,17 +1,21 @@
-from typing import Annotated, Type, TypeVar, Sequence, Any, Generic, Union, Callable, cast
+from typing import Annotated, Type, TypeVar, Sequence, Any, Generic, Union, Callable, cast, overload
 from typing import _GenericAlias, GenericAlias, _SpecialGenericAlias, _UnionGenericAlias, _SpecialForm # pyright: ignore[reportUnknownVariableType, reportAttributeAccessIssue, reportPrivateUsage ]
-from types import UnionType, NoneType, EllipsisType
+from types import UnionType, NoneType, EllipsisType, FunctionType
 from collections import abc
+import sys
 
+from typingutils.core.compat.typevar_tuple import TypeVarTuple
 from typingutils.core.attributes import (
-    BASES, NAME, QUALIFIED_NAME, MODULE, ORIGIN, ARGS, PARAMETERS,
+    BASES, NAME, QUALIFIED_NAME, MODULE, ORIGIN, ARGS, PARAMETERS, TYPE_PARAMS,
     GENERIC_CONSTRUCTOR, SPECIAL_CONSTRUCTOR, BOUND, CONSTRAINTS
 )
 
 TypeParameter = Annotated[ type | type[Any], "Represents any type." ]
 UnionParameter = Annotated[ UnionType | tuple[TypeParameter, ...], "Represents a union of types." ]
-AnyType = Annotated[ TypeParameter | UnionParameter | TypeVar, "Represents any type, union or typevar." ]
+TypeVarParameter = Annotated[ TypeVar | TypeVarTuple, "Represents a generic type parameter." ]
+AnyType = Annotated[ TypeParameter | UnionParameter | TypeVarParameter, "Represents any type, union or typevar." ]
 TypeArgs = Annotated[ tuple[AnyType, ...], "Represents a sequence of types, unions or typevars." ]
+AnyFunction = Annotated[ FunctionType | Callable[..., Any], "Represents any function" ]
 
 SetOfAny = set((Any,))
 
@@ -34,14 +38,10 @@ def is_generic_type(cls: AnyType) -> bool:
         return False
     elif hasattr(cls, ORIGIN):
         from typingutils.core.instances import _extract_args # pyright: ignore[reportPrivateUsage]
-        args, success = _extract_args(cls, extract_types_from_typevars = False, include_typevars = True)
-        if success:
-            return any(args)
-        return True
+        parameters, args, _ = _extract_args(cls)
+        return any(parameters) if parameters is not None else args is None
     elif hasattr(cls, BASES) and Generic in getattr(cls, BASES):
         return True
-    # elif hasattr(cls, PARAMETERS) and not hasattr(cls, ORIGINAL_CLASS) and get_generic_parameters(cls):
-    #     return True
     elif type(cls) in GENERIC_BASE_TYPES:
         return True # pragma: no cover
     else:
@@ -68,10 +68,15 @@ def is_subscripted_generic_type(cls: AnyType) -> bool:
     return hasattr(cls, ARGS) and any(get_generic_arguments(cls))
     # return is_generic_type(cls) and any(get_generic_arguments(cls, include_typevars = False))
 
-
-def get_generic_parameters(obj: TypeParameter, *, extract_types_from_typevars: bool = False) -> TypeArgs:
+@overload
+def get_generic_parameters(obj: TypeParameter | AnyFunction) -> tuple[TypeVar, ...]:
+    ...
+@overload
+def get_generic_parameters(obj: TypeParameter | AnyFunction, *, extract_types_from_typevars: bool = False) -> TypeArgs:
+    ...
+def get_generic_parameters(obj: TypeParameter | AnyFunction, *, extract_types_from_typevars: bool = False) -> TypeArgs:
     """
-    Returns the generic typevars required to create a subscripted generic type
+    Returns the generic typevars required to create a subscripted generic type (or function, python 3.12).
     of an object. Will even work when called from within a constructor of the class.
 
     Examples:
@@ -80,17 +85,18 @@ def get_generic_parameters(obj: TypeParameter, *, extract_types_from_typevars: b
         a = get_generic_parameters(GenClass[str]) => ~T
 
     Args:
-        obj (TypeParameter): A type.
+        obj (TypeParameter | AnyFunction): A type or function.
 
     Returns:
         TypeArgs: A sequence of types.
     """
-    if hasattr(obj, PARAMETERS):
-        if params := getattr(obj, PARAMETERS):
-            return tuple(
-                get_types_from_typevar(param) if extract_types_from_typevars and isinstance(param, TypeVar) else param
-                for param in params
-            )
+    for attr in (PARAMETERS, TYPE_PARAMS): # __type_params__ is new in python 3.12
+        if hasattr(obj, attr):
+            if params := getattr(obj, attr):
+                return tuple(
+                    get_types_from_typevar(param) if extract_types_from_typevars and isinstance(param, TypeVar) else param
+                    for param in params
+                )
 
     return ()
 
@@ -113,10 +119,12 @@ def get_type_name(cls: AnyType) -> str:
         return "None"
     if cls is EllipsisType:
         return "..."
+    if isinstance(cls, TypeVarTuple):
+        return f"*{cls}"
     if isinstance(cls, TypeVar):
-        if bound := getattr(cls, BOUND):
+        if hasattr(cls, BOUND) and ( bound := getattr(cls, BOUND) ):
             return f"{cls}<{get_type_name(bound)}>"
-        elif constraints := tuple( get_type_name(t) for t in getattr(cls, CONSTRAINTS) ):
+        elif hasattr(cls, CONSTRAINTS) and ( constraints := tuple( get_type_name(t) for t in getattr(cls, CONSTRAINTS) ) ):
             return f"{cls}<{'|'.join(constraints)}>"
         else:
             return f"{cls}"
@@ -288,8 +296,8 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
         bool: True if cls is an instance of base.
     """
 
-    if type(cls) is TypeVar: # or type(base) is TypeVar:
-        raise ValueError("Argument cls cannot be an instance of TypeVar")
+    if isinstance(cls, (TypeVar, TypeVarTuple)):
+        raise ValueError("Argument cls cannot be an instance of TypeVar or TypeVarTuple")
     if not cls:
         return False # pragma: no cover
     elif cls is base:
@@ -314,6 +322,9 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
 
     if is_type(cls):
         if is_type(base):
+            if get_generic_origin(cls) is base:
+                return True
+
             cls_args = get_generic_arguments(cls) if is_subscripted_generic_type(cls) else get_union_types(cast(UnionParameter, cls)) if is_union(cls) else ()
             if is_generic_type(base):
                 base_args = get_generic_parameters(cast(type[Any], base), extract_types_from_typevars = True)
@@ -342,13 +353,15 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
 
     return issubclass(cls, base) # fallback # pyright: ignore[reportArgumentType] # pragma: no cover
 
-def get_types_from_typevar(typevar: TypeVar) -> TypeParameter | UnionParameter:
-    if bound := getattr(typevar, BOUND):
-        return Union[bound]
-    elif constraints := getattr(typevar, CONSTRAINTS):
-        return Union[constraints]
-    else:
-        return type[Any]
+def get_types_from_typevar(typevar: TypeVarParameter) -> TypeParameter | UnionParameter:
+    if isinstance(typevar, TypeVar) and hasattr(typevar, BOUND):
+        if bound := getattr(typevar, BOUND):
+            return Union[bound]
+        elif constraints := getattr(typevar, CONSTRAINTS):
+            return Union[constraints]
+    elif isinstance(typevar, (TypeVar, TypeVarTuple)): # pyright: ignore[reportUnnecessaryIsInstance]
+        return tuple[type[Any], ...]
+    return type[Any]
 
 def construct_generic_type(cls: type, *generic_arguments: AnyType | EllipsisType) -> type:
     generic_arguments = tuple( arg if arg != EllipsisType else Ellipsis for arg in generic_arguments )

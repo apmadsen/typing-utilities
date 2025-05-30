@@ -1,8 +1,9 @@
 # pyright: basic
-from typing import Any, Type, Iterable, TypeVar, cast
+from typing import Any, Type, Iterable, TypeVar, Generic, cast
 from collections import abc, deque, defaultdict, OrderedDict, ChainMap
 from types import NoneType
 from pytest import raises as assert_raises, fixture
+
 from typingutils import issubclass_typing, get_type_name, get_type_name, TypeParameter, UnionParameter
 
 from tests.other_impl.issubclass import comparison_generator
@@ -221,8 +222,7 @@ class TestClass:
 
             result = issubclass_typing(cls, base)
             print(f"Testing issubclass_typing({get_type_name(cls)}, {get_type_name(base)}) ==> {result}")
-            if result != expected:
-                issubclass_typing(cls, base)
+
             assert result == expected
 
             for impl, result_comparison in comparison_generator(cls, base):

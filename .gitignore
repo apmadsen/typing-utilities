@@ -18,8 +18,8 @@ parts/
 sdist/
 var/
 typings/
-venv/
-.venv/
+venv*/
+.venv*/
 *.egg-info/
 .installed.cfg
 *.egg

@@ -3,9 +3,9 @@ from types import UnionType, NoneType
 from collections import abc
 from inspect import stack as get_stack
 
-from typingutils.core.attributes import  ORIGIN, ORIGINAL_CLASS, ARGS
+from typingutils.core.attributes import  ORIGIN, ORIGINAL_CLASS, ARGS, TYPE_PARAMS
 from typingutils.core.types import (
-    TypeParameter, UnionParameter, AnyType, TypeArgs,
+    TypeParameter, TypeVarParameter, UnionParameter, AnyType, TypeArgs,
     is_subscripted_generic_type, is_generic_type, get_generic_origin, issubclass_typing
 )
 
@@ -50,55 +50,55 @@ def get_original_class(obj: Any) -> TypeParameter:
 
     return cls
 
-def _extract_args(obj: Any, *, extract_types_from_typevars: bool = False, include_typevars: bool = True) -> tuple[TypeArgs, bool]:
+def _extract_args(obj: Any) -> tuple[tuple[TypeParameter, ...] | None, tuple[TypeVarParameter, ...] | None, tuple[TypeParameter | UnionParameter, ...] | None]:
     """
     Extracts arguments from a generic object or type.
 
     Examples:
         T = TypeVar('T', bound=str)
         class GenClass(Generic[T]): pass
-        args = _extract_args(GenClass) # => (~T<str>,)
-        args = _extract_args(GenClass, extract_types_from_typevars=True) # => (str,)
-        args = _extract_args(GenClass[str]) # => (str,)
+        params, args, types = _extract_args(GenClass) # => (~T<str>, None, (str,))
+        params, args, types = _extract_args(GenClass[str]) # => (None, (str,), (str,))
 
     Args:
         obj (Any): A class or an instance of a class.
-        extract_types_from_typevars (bool, optional): Extracts and returns types from typevars instead of the typevars themselves. Defaults to False.
-        include_typevars (bool, optional): Whether or not to include typevars. If any typevars are present, ordinary args won't be returned. Defaults to True.
 
     Returns:
-        tuple[TypeArgs, bool]: A sequence of type arguments and a bool indicating prescence of args or not.
+        tuple[
+            tuple[TypeParameter, ...] | None,
+            tuple[TypeVarParameter, ...] | None,
+            tuple[TypeParameter | UnionParameter, ...] | None
+        ]: Three sequences corresponding to parameters, arguments and types.
     """
 
-    if hasattr(obj, ARGS):
-        from typingutils.core.types import get_types_from_typevar
+    for attr in (ARGS, TYPE_PARAMS):
+        if hasattr(obj, attr):
+            from typingutils.core.types import get_types_from_typevar
 
-        args = tuple(
-            (
-                arg,
-                get_types_from_typevar(arg) if isinstance(arg, TypeVar) else arg,
-                isinstance(arg, TypeVar)
+            args = tuple(
+                (
+                    arg,
+                    get_types_from_typevar(arg) if isinstance(arg, TypeVar) else arg,
+                    isinstance(arg, TypeVar)
+                )
+                for arg in cast(tuple[Any], getattr(obj, attr))
             )
-            for arg in cast(tuple[Any], getattr(obj, ARGS))
-        )
-        typevar_args = tuple( arg for arg, _, typevar in args if typevar )
-        ordinary_args = tuple( arg for arg, _, typevar in args if not typevar )
-        result_args = tuple( arg if not typevar or not extract_types_from_typevars else value for arg, value, typevar in args if not typevar or extract_types_from_typevars )
+            parameters = tuple( arg for arg, _, typevar in args if typevar )
+            arguments = tuple( arg for arg, _, typevar in args if not typevar )
+            parameter_types = tuple( arg if not typevar else value for arg, value, typevar in args if not typevar )
 
-        # in python 3.13 certain types may contain both typevars and types in the __args__ attribyte,
-        # case in point typing.ContextManager[T] which has ` ~T, bool |None ` except of the expected ` ~T `
+            # in python 3.13 certain types may contain both typevars and types in the __args__ attribyte,
+            # case in point typing.ContextManager[T] which has ` ~T, bool |None ` except of the expected ` ~T `
+            # which is why either parameters or arguments must be None when returned
 
-        if include_typevars and typevar_args:
-            if extract_types_from_typevars:
-                return result_args, True
+            if parameters and any(parameters):
+                return parameters, None, parameter_types
+            elif arguments and any(arguments):
+                return None, arguments, parameter_types
             else:
-                return typevar_args, True
-        elif not include_typevars and not typevar_args and ordinary_args:
-            return ordinary_args, True
+                return None, None, None # pragma: no cover
 
-        return (), True
-
-    return (), False
+    return None, None, None
 
 def get_generic_arguments(obj: Any) -> TypeArgs:
     """
@@ -120,8 +120,8 @@ def get_generic_arguments(obj: Any) -> TypeArgs:
         TypeArgs: A sequence of types.
     """
 
-    args, success = _extract_args(obj, extract_types_from_typevars = False, include_typevars = False)
-    if success:
+    _, args, _ = _extract_args(obj)
+    if args is not None:
         return args
     elif not is_type(obj):
         orig_class = get_original_class(obj)
@@ -175,7 +175,7 @@ def isinstance_typing(obj: Any) -> bool:
     """
     ...
 @overload
-def isinstance_typing(obj: Any, cls: AnyType | tuple[AnyType, ...]) -> bool:
+def isinstance_typing(obj: Any, cls: AnyType | TypeArgs) -> bool:
     """
     Checks if object is an instance of the specified type/types. This implementation
     works similarly to the builtin isinstance(), but supports generics as well.
@@ -188,7 +188,7 @@ def isinstance_typing(obj: Any, cls: AnyType | tuple[AnyType, ...]) -> bool:
         bool: A boolean value indicating if object is an instance of the specified type/types.
     """
     ...
-def isinstance_typing(obj: Any, cls: AnyType | tuple[AnyType, ...] | None = None) -> bool:
+def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None) -> bool:
     if cls is None and not is_type(obj):
         return True
     elif obj is cls is object:

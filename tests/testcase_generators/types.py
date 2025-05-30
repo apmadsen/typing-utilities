@@ -6,6 +6,7 @@ from types import UnionType
 from typingutils.core.types import _is_special_generic_type, get_generic_parameters
 from typingutils.core.attributes import NAME, GENERIC_CONSTRUCTOR
 
+
 @dataclass
 class TypesTestcase:
     cls: type[Any]

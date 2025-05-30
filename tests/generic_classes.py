@@ -2,6 +2,7 @@
 from __future__ import annotations
 from typing import TypeVar, Generic, Mapping, Iterator
 
+
 T = TypeVar('T')
 Tstr = TypeVar('Tstr', bound=str)
 T1 = TypeVar('T1')
@@ -14,6 +15,7 @@ class NormalClass():
 
 class GenericClass1(Generic[T]):
     pass
+
 class GenericSubClass1(GenericClass1[T]):
     pass
 
