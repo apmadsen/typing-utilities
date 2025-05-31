@@ -1,4 +1,4 @@
-[Start](/README.md) > API
+[API](/docs/api.md)
 # API
 
 ## typingutils module

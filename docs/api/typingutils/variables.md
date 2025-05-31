@@ -1,4 +1,4 @@
-[Start](/README.md) > [API](/docs/api.md) > typingutils module variables
+[API](/docs/api.md) > typingutils module variables
 # `typingutils` module variables
 
 ## TypeParameter

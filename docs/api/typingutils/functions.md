@@ -1,4 +1,4 @@
-[Start](/README.md) > [API](/docs/api.md) > typingutils module functions
+[API](/docs/api.md) > typingutils module functions
 # `typingutils` module functions
 
 ## issubclass_typing(cls: _AnyType_, base: _AnyType | TypeArgs_) -> _bool_

@@ -1,4 +1,4 @@
-[Start](/README.md) > [API](/docs/api.md) > typingutils.internal module functions
+[API](/docs/api.md) > typingutils.internal module functions
 # `typingutils.internal` module functions
 
 ## get_generic_origin(cls: _AnyType_) -> _TypeParameter_
