@@ -1,6 +1,6 @@
 [project]
 name = "typing-utilities"
-version = "0.0.0"
+dynamic = ["version"]
 description = "Runtime reflection and validation of types and generics."
 keywords = ["windows", "linux", "generics", "typing"]
 readme = "README.md"
