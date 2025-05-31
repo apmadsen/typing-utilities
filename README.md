@@ -61,9 +61,9 @@ This project does not check the contents of objects like lists and dicts, which 
 
 It's not the goal of this project to deliver generic types such as generically enforced lists and dicts.
 
-### API
+## API
 
-[Go to API documentation](/docs/api.md)
+[Go to API documentation](https://github.com/apmadsen/typing-utilities/blob/main/docs/api.md)
 
 ## Other similar projects
 
