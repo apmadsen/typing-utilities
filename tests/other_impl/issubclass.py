@@ -1,3 +1,4 @@
+# pyright: basic
 from typing import TypeVar, Iterable, cast
 from typingutils import get_type_name, TypeParameter, UnionParameter, AnyType
 
@@ -16,7 +17,7 @@ implementations = [ builtin ]
 
 try:
 
-    from typing_utils import issubtype # pyright: ignore[reportUnknownVariableType]
+    from typing_utils import issubtype # pyright: ignore[reportUnknownVariableType,reportMissingImports]
     typing_utils_impl_failed: list[str] = []
 
     def typing_utils(cls: TypeParameter | UnionParameter, base: TypeParameter | UnionParameter | TypeVar | tuple[TypeParameter | UnionParameter | TypeVar, ...]) -> bool | None:
@@ -33,7 +34,7 @@ except ImportError:
 
 try:
 
-    from runtype import issubclass
+    from runtype import issubclass # pyright: ignore[reportMissingImports]
     runtype_impl_failed: list[str] = []
 
     def runtype(cls: TypeParameter | UnionParameter, base: TypeParameter | UnionParameter | TypeVar | tuple[TypeParameter | UnionParameter | TypeVar, ...]) -> bool | None:

@@ -3,7 +3,7 @@ from typing import Generic, Tuple, Dict, Optional, Union, Any, cast
 from datetime import date, time, datetime
 from pytest import raises as assert_raises
 
-from typingutils import isinstance_typing, issubclass_typing, get_generic_arguments
+from typingutils import isinstance_typing, issubclass_typing, get_generic_arguments, get_generic_parameters
 from typingutils.internal import get_original_class
 
 from tests.generic_classes import NormalClass, GenericClass1, T, T1, T2
@@ -55,8 +55,6 @@ class TestClass:
             ("", True, ()),
         )):
             result = get_generic_arguments(inst) if override_fn else inst
-            if result != expected:
-                x=0
             assert result == expected
 
 

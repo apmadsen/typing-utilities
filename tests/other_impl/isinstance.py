@@ -1,3 +1,4 @@
+# pyright: basic
 from typing import TypeVar, Iterable, Any, cast
 from typingutils import get_type_name, TypeParameter, UnionParameter, AnyType
 
@@ -15,7 +16,7 @@ implementations = [ builtin ]
 
 try:
 
-    from runtype import isa
+    from runtype import isa # pyright: ignore[reportMissingImports]
     runtype_impl_failed: list[str] = []
 
     def runtype(obj: Any, cls: TypeParameter | UnionParameter | tuple[TypeParameter | UnionParameter, ...] | TypeVar) -> bool | None:

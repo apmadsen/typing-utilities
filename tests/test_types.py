@@ -4,9 +4,10 @@ from types import NoneType, EllipsisType, UnionType
 from pytest import raises as assert_raises
 
 from typingutils import (
-    is_type, is_union, get_type_name, is_optional, get_optional_type, TypeParameter, UnionParameter,
+    is_type, is_union, get_type_name, is_optional, get_optional_type, TypeParameter, UnionParameter, TypeVarParameter,
     is_subscripted_generic_type, is_generic_type, get_generic_arguments, get_generic_parameters
 )
+from typingutils.core.compat.typevar_tuple import TypeVarTuple
 from typingutils.internal import get_generic_origin, get_original_class, get_union_types, get_types_from_typevar, construct_generic_type
 from typingutils.core.attributes import ORIGIN
 
@@ -52,6 +53,7 @@ class TestClass:
                     assert any(result)
                 else:
                     assert not any(result)
+
 
 
 
@@ -181,13 +183,14 @@ class TestClass:
 
 
     def test_get_type_name(self):
-        tested: set[type[Any] | TypeVar] = set()
+        tested: set[type[Any] | TypeVarParameter ] = set()
 
         for cls in set([
             *generic_types,
             *non_generic_types,
-            *[ t.base for t in self.issubclass_testcases ],
-            *[ t.comparison for t in self.issubclass_testcases ],
+            *( t.base for t in self.issubclass_testcases ),
+            *( t.comparison for t in self.issubclass_testcases ),
+            TypeVarTuple("Ts")
         ]):
             if cls not in tested:
                 tested.add(cls)
@@ -296,6 +299,7 @@ class TestClass:
             (TypeVar("T1", str, int), str|int),
             (TypeVar("T1", bound=int), int),
             (TypeVar("T1", bool, int), bool|int),
+            (TypeVarTuple("Tv1"), tuple[type[Any], ...]),
         )):
             result = get_types_from_typevar(typevar)
             print(f"Testing get_types_from_typevar({get_type_name(typevar)}) ==> {result}")
