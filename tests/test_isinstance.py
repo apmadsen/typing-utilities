@@ -76,7 +76,9 @@ instance_assertions: list[tuple[object | tuple[object], tuple[TypeParameter | Un
         Type[Any],
         type[Any],
         list,
+        list[Any],
         List,
+        List[Any],
         abc.Collection,
         abc.Collection[Any],
         abc.Sequence,
@@ -92,7 +94,9 @@ instance_assertions: list[tuple[object | tuple[object], tuple[TypeParameter | Un
         Type[Any],
         type[Any],
         deque,
+        deque[Any],
         Deque,
+        Deque[Any],
         abc.Collection,
         abc.Collection[Any],
         abc.Sequence,
@@ -187,12 +191,12 @@ instance_assertions: list[tuple[object | tuple[object], tuple[TypeParameter | Un
         type[Any],
         set,
         set[Any],
+        Set,
+        Set[Any],
         abc.Set,
         abc.Set[Any],
         abc.Collection,
-        abc.Collection[Any],
-        Set,
-        Set[Any]), True),
+        abc.Collection[Any]), True),
     (frozenset((1,2,3)), (
         object,
         Type[Any],
@@ -220,101 +224,124 @@ all_instances = tuple( (instance, is_inst) for instances, _, is_inst in instance
 
 @fixture(scope = "class")
 def comparisons():
-    impl: dict[str, list[str]] = defaultdict(lambda: [])
+    impl: dict[str, list[tuple[str, str]]] = defaultdict(lambda: [])
     yield impl
 
     print("\n")
 
     for key in impl:
         count = 0
-        for comparison in impl[key]:
-            print(comparison)
-            count +=1
-
-        print(f"Comparison with {key}: {count} differences\n")
-
-class TestClass:
-
-    def test_all_types(self, comparisons: dict[str, list[str]]):
-        for type_ in all_types:
-            result = is_type(type_)
-
-            if type_ is object:
-                assert not result
+        failed = 0
+        for comparison, result in impl[key]:
+            if "Error" in result:
+                failed += 1
+                print(f"{comparison} ==> FAILED")
             else:
-                assert result
+                print(f"{comparison} ==> {result}")
+                count +=1
 
-            result = isinstance_typing(type_, type_)
+        print(f"Comparison with {key}: {count} differences and {failed} failed\n")
 
-            if type_ is object:
-                assert result # object is always an instance of object
-            else:
-                assert not result
 
-            for impl, result_comparison in comparison_generator(type_, type_):
-                if result_comparison is not None:
+def test_all_types(comparisons: dict[str, list[tuple[str, str]]]):
+    for type_ in all_types:
+        result = is_type(type_)
+
+        if type_ is object:
+            assert not result
+        else:
+            assert result
+
+        result = isinstance_typing(type_, type_)
+
+        if type_ is object:
+            assert result # object is always an instance of object
+        else:
+            assert not result
+
+        for impl, result_comparison in comparison_generator(type_, type_):
+            if result != result_comparison:
+                comparisons[impl].append((f"Comparing {impl}.isinstance({type_}, {get_type_name(type_)})", f"{result_comparison} != {result}"))
+
+
+def test_all_instances(comparisons: dict[str, list[tuple[str, str]]]):
+    for instance, is_inst in all_instances:
+        result = isinstance_typing(instance)
+
+        if is_inst:
+            print(f"Testing isinstance_typing({instance}) ==> {result}")
+            assert result
+        else:
+            print(f"Testing !isinstance_typing({instance}) ==> {result}")
+            assert not result
+
+
+
+def test_explicit_assertions(comparisons: dict[str, list[tuple[str, str]]]):
+    for instances, types, is_inst in instance_assertions:
+        negations = all_types.difference(types)
+
+        for instance in cast(Iterable[object], instances if isinstance(instances, tuple) else (instances,)):
+            for type_ in types:
+                result = isinstance_typing(instance, type_)
+
+                print(f"Testing isinstance_typing({instance}, {get_type_name(type_)}) ==> {result}")
+                assert result is not None
+                assert result == True
+
+                for impl, result_comparison in comparison_generator(instance, type_):
                     if result != result_comparison:
-                        comparisons[impl].append(f"Comparing {impl}.isinstance({type_}, {get_type_name(type_)}) ==> {result_comparison} != {result}")
+                        comparisons[impl].append((f"Comparing {impl}.isinstance({instance}, {get_type_name(type_)})", f"{result_comparison} != {result}"))
 
 
-    def test_all_instances(self, comparisons: dict[str, list[str]]):
-        for instance, is_inst in all_instances:
-            result = isinstance_typing(instance)
+            for type_ in negations:
+                result = isinstance_typing(instance, type_)
+                print(f"Testing !isinstance_typing({instance}, {get_type_name(type_)}) ==> {result}")
 
-            if is_inst:
-                print(f"Testing isinstance_typing({instance}) ==> {result}")
-                assert result
-            else:
-                print(f"Testing !isinstance_typing({instance}) ==> {result}")
-                assert not result
+                assert result is not None
+                assert result == False
 
-
-
-    def test_explicit_assertions(self, comparisons: dict[str, list[str]]):
-        for instances, types, is_inst in instance_assertions:
-            negations = all_types.difference(types)
-
-            for instance in cast(Iterable[object], instances if isinstance(instances, tuple) else (instances,)):
-                for type_ in types:
-                    result = isinstance_typing(instance, type_)
-
-                    print(f"Testing isinstance_typing({instance}, {get_type_name(type_)}) ==> {result}")
-                    assert result is not None
-                    assert result == True
-
-                    for impl, result_comparison in comparison_generator(instance, type_):
-                        if result_comparison is not None:
-                            if result != result_comparison:
-                                comparisons[impl].append(f"Comparing {impl}.isinstance({instance}, {get_type_name(type_)}) ==> {result_comparison} != {result}")
-
-
-                for type_ in negations:
-                    result = isinstance_typing(instance, type_)
-                    print(f"Testing !isinstance_typing({instance}, {get_type_name(type_)}) ==> {result}")
-
-                    assert result is not None
-                    assert result == False
-
-                    for impl, result_comparison in comparison_generator(instance, type_):
-                        if result_comparison is not None:
-                            if result != result_comparison:
-                                comparisons[impl].append(f"Comparing {impl}.isinstance({instance}, {get_type_name(type_)}) ==> {result_comparison} = {result}")
-
-
-    def test_multiple(self, comparisons: dict[str, list[str]]):
-        for obj, cls, expected in cast(tuple[tuple[object, Tuple[TypeParameter|UnionParameter, ...], bool]], (
-            ("abc", (str, int, bool), True),
-            ("abc", (float, int, bool), False),
-            ("abc", (float, int, bool), False),
-            ("abc", (float, str|int, bool), True),
-        )):
-
-            result = isinstance_typing(obj, cls)
-            print(f"Testing isinstance_typing({obj}, {cls}) ==> {result}")
-            assert result == expected
-
-            for impl, result_comparison in comparison_generator(obj, cls):
-                if result_comparison is not None:
+                for impl, result_comparison in comparison_generator(instance, type_):
                     if result != result_comparison:
-                        comparisons[impl].append(f"Comparing {impl}.isinstance({obj}, {get_type_name(cast(AnyType, cls))}) ==> {result_comparison} != {result}")
+                        comparisons[impl].append((f"Comparing {impl}.isinstance({instance}, {get_type_name(type_)})", f"{result_comparison} = {result}"))
 
+
+def test_multiple(comparisons: dict[str, list[tuple[str, str]]]):
+    for obj, cls, expected in cast(tuple[tuple[object, Tuple[TypeParameter|UnionParameter, ...], bool]], (
+        ("abc", (str, int, bool), True),
+        ("abc", (float, int, bool), False),
+        ("abc", (float, int, bool), False),
+        ("abc", (float, str|int, bool), True),
+    )):
+
+        result = isinstance_typing(obj, cls)
+        print(f"Testing isinstance_typing({obj}, {cls}) ==> {result}")
+        assert result == expected
+
+        for impl, result_comparison in comparison_generator(obj, cls):
+            if result != result_comparison:
+                comparisons[impl].append((f"Comparing {impl}.isinstance({obj}, {get_type_name(cast(AnyType, cls))})", f"{result_comparison} != {result}"))
+
+def test_builtin_generic_types(comparisons: dict[str, list[tuple[str, str]]]):
+    for obj, cls, expected in cast(tuple[tuple[object, Tuple[TypeParameter|UnionParameter, ...], bool]], (
+        ([], list[Any], True),
+        ([], list, True),
+        ([], list[str], False),
+        (["a", "b", "c"], list[Any], True),
+        (["a", "b", "c"], list, True),
+        (["a", "b", "c"], list[str], False),
+        ({}, dict[Any, Any], True),
+        ({}, dict, True),
+        ({}, dict[str, Any], False),
+        ({"a": 1, "b": 2}, dict[Any, Any], True),
+        ({"a": 1, "b": 2}, dict, True),
+        ({"a": 1, "b": 2}, dict[str, Any], False),
+    )):
+
+        result = isinstance_typing(obj, cls)
+        print(f"Testing isinstance_typing({obj}, {cls}) ==> {result}")
+        assert result == expected
+
+        for impl, result_comparison in comparison_generator(obj, cls):
+            if result != result_comparison:
+                comparisons[impl].append((f"Comparing {impl}.isinstance({obj}, {get_type_name(cast(AnyType, cls))})", f"{result_comparison} != {result}"))

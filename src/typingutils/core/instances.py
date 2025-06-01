@@ -5,7 +5,7 @@ from inspect import stack as get_stack
 
 from typingutils.core.attributes import  ORIGIN, ORIGINAL_CLASS, ARGS, TYPE_PARAMS
 from typingutils.core.types import (
-    TypeParameter, TypeVarParameter, UnionParameter, AnyType, TypeArgs,
+    TypeParameter, TypeVarParameter, UnionParameter, AnyType, SetOfAny, TypeArgs,
     is_subscripted_generic_type, is_generic_type, get_generic_origin, issubclass_typing
 )
 
@@ -189,7 +189,10 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs) -> bool:
     """
     ...
 def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None) -> bool:
-    if cls is None and not is_type(obj):
+    obj_is_type = is_type(obj)
+    cls_is_type = is_type(cls)
+
+    if cls is None and not obj_is_type:
         return True
     elif obj is cls is object:
         return True # object is always an instance of itself
@@ -203,11 +206,11 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None) -> bool:
         return True # all class instances are derived from type and object
     elif type(obj) is NoneType and cls in (object, type[Any], Type[Any], NoneType):
         return True # None is derived from type and object
-    elif is_type(obj):
+    elif obj_is_type:
         return cls is object # all other types are only an instance of object
 
-    if is_type(cls):
-        if not is_type(obj) and cls is type:
+    if cls_is_type:
+        if not obj_is_type and cls is type:
             return False # only other types are derived from type object
         if get_generic_origin(cast(type, cls)) is Union:
             for cls1 in getattr(cls, ARGS):
@@ -217,18 +220,15 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None) -> bool:
         if issubclass_typing(type(obj), cast(type, cls)): # pyright: ignore[reportUnknownArgumentType]
             return True
 
-    if isinstance(cls, abc.Collection):
-        for cls1 in cls:
-            if isinstance_typing(obj, cls1):
-                return True
-        return False
+    obj_has_orig_cls_attr = hasattr(obj, ORIGINAL_CLASS)
+    cls_has_args_attr = hasattr(cls, ARGS)
 
-    if hasattr(obj, ORIGINAL_CLASS) and getattr(obj, ORIGINAL_CLASS) != type:
+    if obj_has_orig_cls_attr and getattr(obj, ORIGINAL_CLASS) != type:
         origin = getattr(obj, ORIGINAL_CLASS)
         if origin == cls:
             return True
 
-    if not hasattr(obj, ORIGINAL_CLASS) and hasattr(cls, ORIGIN) and hasattr(cls, ARGS):
+    if not obj_has_orig_cls_attr and hasattr(cls, ORIGIN) and cls_has_args_attr and set(get_generic_arguments(cls)) == SetOfAny:
         cls = getattr(cls, ORIGIN)
 
     if not is_subscripted_generic_type(cast(TypeParameter | UnionParameter, cls)) and not is_generic_type(cast(TypeParameter, type(obj))):
