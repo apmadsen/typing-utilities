@@ -1,5 +1,13 @@
 {
     "python.envFile": "${workspaceFolder}/.env",
+    "testing.coverageBarThresholds": {
+        "red": 0,
+        "yellow": 60,
+        "green": 90
+    },
+    "testing.coverageToolbarEnabled": true,
+    "testing.showCoverageInExplorer": true,
+    "testing.displayedCoveragePercent": "totalCoverage",
     "python.testing.pytestEnabled": true,
     "python.testing.pytestArgs": [
         "-v",

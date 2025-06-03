@@ -37,14 +37,22 @@ The `get_optional_type` function extracts any types from `cls` regardless if it'
 
 The `isinstance_typing` function checks whether or not `obj` is an instance of a class.
 
-## isinstance_typing(obj: _Any_, cls: _AnyType | TypeArgs_) -> _bool_
+## isinstance_typing(obj: _Any_, cls: _AnyType | TypeArgs_, *, recursive: _bool_ = _False_) -> _bool_
 
-The `isinstance_typing` function extends the builtin `isinstance(obj, cls)` function allowing `cls` to be either a type, typevar or union object.
+The `isinstance_typing` function extends the builtin `isinstance(obj, cls)` function allowing `cls` to be either a type, typevar or union object. The `recursive` option allows for recursive or deep instance checking of collection types such as sequeces, mappings, sets and iterables.
 
 ## is_type(obj: Any) -> _bool_
 
 The `is_type` function checks whenter or not `obj` is recognized as a type. This includes unions and `type[Any]`.
 
+## check_type(obj: _Any_) -> _TypeCheck_
+
+The `check_type` functions checks if `obj` is a type and in that case, also if it's a generic type or a subscripted generic type. It returns a `TypeCheck` NamedTuple instance.
+
+### Example
+```python
+is_type, is_generic_type, subscripted_generic_type = check_type(cls)
+```
 ## get_generic_arguments(obj: _Any_) -> _tuple[type|union, ...]_
 
 The `get_generic_arguments` function returns the types used to create the subscripted generic type or instance `obj`.

@@ -2,7 +2,6 @@ from typing import Annotated, Type, TypeVar, Sequence, Any, Generic, Union, Call
 from typing import _GenericAlias, GenericAlias, _SpecialGenericAlias, _UnionGenericAlias, _SpecialForm # pyright: ignore[reportUnknownVariableType, reportAttributeAccessIssue, reportPrivateUsage ]
 from types import UnionType, NoneType, EllipsisType, FunctionType
 from collections import abc
-import sys
 
 from typingutils.core.compat.typevar_tuple import TypeVarTuple
 from typingutils.core.attributes import (
@@ -66,7 +65,6 @@ def is_subscripted_generic_type(cls: AnyType) -> bool:
     from typingutils.core.instances import get_generic_arguments
 
     return hasattr(cls, ARGS) and any(get_generic_arguments(cls))
-    # return is_generic_type(cls) and any(get_generic_arguments(cls, include_typevars = False))
 
 @overload
 def get_generic_parameters(obj: TypeParameter | AnyFunction) -> tuple[TypeVar, ...]:
@@ -305,7 +303,7 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
     elif base in (object, TypeParameter,  type[Any], Type[Any]):
         return True
 
-    from typingutils.core.instances import get_generic_arguments, is_type
+    from typingutils.core.instances import get_generic_arguments, check_type
 
     if isinstance(base, abc.Collection):
         for base_cls in cast(Sequence[TypeParameter], base):
@@ -313,27 +311,31 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
                 return True
         return False
 
-    if is_subscripted_generic_type(cast(TypeParameter | UnionParameter | TypeVar, base)) and set(get_generic_arguments(base)) == SetOfAny:
+
+    cls_is_type, cls_is_generic_type, cls_is_subscripted_generic_type = check_type(cls)
+    base_is_type, base_is_generic_type, base_is_subscripted_generic_type = check_type(base)
+    base_args: TypeArgs = ()
+
+    if base_is_subscripted_generic_type:
+        base_args = get_generic_arguments(base)
+
+    if base_args and set(base_args) == SetOfAny:
         base = get_generic_origin(cast(TypeParameter | UnionParameter | TypeVar, base))
 
     if is_union(base):
         classes = get_generic_arguments(base)
-        return any([ issubclass_typing(cls, b) for b in classes ]) or is_type(cls) and get_generic_origin(cast(type, cls)) is Union
+        return any([ issubclass_typing(cls, b) for b in classes ]) or cls_is_type and get_generic_origin(cast(type, cls)) is Union
 
-    if is_type(cls):
-        if is_type(base):
+    if cls_is_type:
+        if base_is_type:
             if get_generic_origin(cls) is base:
                 return True
 
-            cls_args = get_generic_arguments(cls) if is_subscripted_generic_type(cls) else get_union_types(cast(UnionParameter, cls)) if is_union(cls) else ()
-            if is_generic_type(base):
+            cls_args = get_generic_arguments(cls) if cls_is_subscripted_generic_type else get_union_types(cast(UnionParameter, cls)) if is_union(cls) else ()
+            if base_is_generic_type:
                 base_args = get_generic_parameters(cast(type[Any], base), extract_types_from_typevars = True)
-            elif is_subscripted_generic_type(base):
-                base_args = get_generic_arguments(base)
-            else:
-                base_args = get_generic_arguments(base)
 
-            if get_generic_origin(cast(type, cls)) == get_generic_origin(base):
+            if get_generic_origin(cls) == get_generic_origin(base):
                 if cls_args == base_args:
                     return True
                 elif cls_args and base_args and len(cls_args) == len(base_args) and not [
@@ -342,7 +344,7 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
                     return True
                 else:
                     return not any(base_args)
-            elif is_type(cls) and not is_generic_type(cls) and not is_subscripted_generic_type(base) and isinstance(base, type):
+            elif cls_is_type and not cls_is_generic_type and not cls_is_subscripted_generic_type and not base_is_subscripted_generic_type and isinstance(base, type):
                 return issubclass(cast(type[Any], cls), base)
 
             else:
@@ -350,6 +352,9 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
 
         elif type(base) is TypeVar:
             return issubclass_typing(cls, get_types_from_typevar(base))
+
+    if cls_is_generic_type or cls_is_subscripted_generic_type or base_is_generic_type or base_is_subscripted_generic_type: # pragma: no cover
+        return False
 
     return issubclass(cls, base) # fallback # pyright: ignore[reportArgumentType] # pragma: no cover
 

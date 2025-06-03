@@ -53,10 +53,6 @@ This project differs from Python and other projects in some aspects:
 
 ## What's not included
 
-### Deep validation checks
-
-This project does not check the contents of objects like lists and dicts, which is why `isinstance_typing([1, 2, 3], list[int])` returns false. The reason is, that while it's relatively easy to compare every item in a list to the type argument of `list[str]`, other generic types are not as straight forward, thus it's better left to the programmer.
-
 ### Generic types
 
 It's not the goal of this project to deliver generic types such as generically enforced lists and dicts.

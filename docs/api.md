@@ -3,6 +3,7 @@
 
 ## typingutils module
 - [Variables](/docs/api/typingutils/variables.md)
+- [Classes](/docs/api/typingutils/classes.md)
 - [Functions](/docs/api/typingutils/functions.md)
 
 
