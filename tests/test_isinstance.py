@@ -222,7 +222,7 @@ all_types = set( type_ for _, types, _ in instance_assertions for type_ in types
 all_instances = tuple( (instance, is_inst) for instances, _, is_inst in instance_assertions for instance in cast(Iterable[object], instances if isinstance(instances, tuple) else (instances,)) )
 
 
-@fixture(scope = "class")
+@fixture(scope = "module")
 def comparisons():
     impl: dict[str, list[tuple[str, str]]] = defaultdict(lambda: [])
     yield impl
@@ -345,3 +345,62 @@ def test_builtin_generic_types(comparisons: dict[str, list[tuple[str, str]]]):
         for impl, result_comparison in comparison_generator(obj, cls):
             if result != result_comparison:
                 comparisons[impl].append((f"Comparing {impl}.isinstance({obj}, {get_type_name(cast(AnyType, cls))})", f"{result_comparison} != {result}"))
+
+
+def test_recursive(comparisons: dict[str, list[tuple[str, str]]]):
+    class IterableInt(abc.Iterable):
+        def __iter__(self):
+            return iter((1, 2, 3))
+    class IterableStr(abc.Iterable):
+        def __iter__(self):
+            return iter(("a", "b", "c"))
+
+    for obj, cls, expected in cast(tuple[tuple[object, Tuple[TypeParameter|UnionParameter, ...], bool]], (
+        ("abc", Iterable[str], True),
+        (123, Iterable[str], False),
+        ((), tuple[Any], True),
+        ((), tuple, True),
+        ((), tuple[str], True),
+        (("a", "b", "c"), tuple[Any], True),
+        (("a", "b", "c"), tuple, True),
+        (("a", "b", "c"), tuple[str], True),
+        (("a", "b", "c"), tuple[int], False),
+        ([], list[Any], True),
+        ([], list, True),
+        ([], list[str], True),
+        (["a", "b", "c"], list[Any], True),
+        (["a", "b", "c"], list, True),
+        (["a", "b", "c"], list[str], True),
+        (["a", "b", "c"], list[int], False),
+        ({}, dict[Any, Any], True),
+        ({}, dict, True),
+        ({}, dict[str, Any], True),
+        ({"a": 1, "b": 2}, dict[Any, Any], True),
+        ({"a": 1, "b": 2}, dict, True),
+        ({"a": 1, "b": 2}, dict[str, Any], True),
+        ({"a": 1, "b": 2}, dict[str, int], True),
+        ({"a": 1, "b": 2}, dict[str, str], False),
+        ({"a": 1, "b": 2}, dict[int, int], False),
+        ({"a", "b"}, set[Any], True),
+        ({"a", "b"}, set[str], True),
+        ({"a", "b"}, set[int], False),
+        (IterableInt(), Iterable, True),
+        (IterableInt(), Iterable[int], True),
+        (IterableInt(), Iterable[str], False),
+        (IterableStr(), Iterable, True),
+        (IterableStr(), Iterable[str], True),
+        (IterableStr(), Iterable[int], False),
+    )):
+
+        result = isinstance_typing(obj, cls, recursive=True)
+        print(f"Testing isinstance_typing({obj}, {cls}, recursive=True) ==> {result}")
+        if result != expected:
+            isinstance_typing(obj, cls, recursive=True)
+        assert result == expected
+
+        for impl, result_comparison in comparison_generator(obj, cls):
+            if result != result_comparison:
+                comparisons[impl].append((f"Comparing {impl}.isinstance({obj}, {get_type_name(cast(AnyType, cls))})", f"{result_comparison} != {result}"))
+
+        with assert_raises(Exception):
+            isinstance_typing(iter(IterableInt()), Iterable[int], recursive=True)

@@ -103,7 +103,7 @@ subclass_assertions: list[tuple[TypeParameter | tuple[TypeParameter, ...], tuple
 
 all_types = set([ type_ for _, types in subclass_assertions for type_ in types ])
 
-@fixture(scope = "class")
+@fixture(scope = "module")
 def comparisons():
     impl: dict[str, list[tuple[str, str]]] = defaultdict(lambda: [])
     yield impl
@@ -216,6 +216,26 @@ def test_typevars(comparisons: dict[str, list[tuple[str, str]]]):
         (str, TypeVar("T", int, str), True),
         (str, TypeVar("T", bound=str), True),
         (str, TypeVar("T", bound=int), False),
+    ):
+
+        result = issubclass_typing(cls, base)
+        print(f"Testing issubclass_typing({get_type_name(cls)}, {get_type_name(base)}) ==> {result}")
+
+        assert result == expected
+
+        for impl, result_comparison in comparison_generator(cls, base):
+            if result != result_comparison:
+                comparisons[impl].append((f"Comparing {impl}.issubclass({get_type_name(cls)}, {get_type_name(base)})", f"{result_comparison} != {result}"))
+
+
+def test_multilevel_types(comparisons: dict[str, list[tuple[str, str]]]):
+    for cls, base, expected in (
+        (tuple[list[str]], tuple[list[str]], True),
+        (tuple[list[str]], tuple[list[int]], False),
+        (tuple[list[dict[str, int]]], tuple[list[dict[str, int]]], True),
+        (tuple[list[dict[str, int]]], tuple[list[dict[str, bool]]], False),
+        (tuple[list[dict[str, set[int]]]], tuple[list[dict[str, set[int]]]], True),
+        (tuple[list[dict[str, set[int]]]], tuple[list[dict[str, set[str]]]], False),
     ):
 
         result = issubclass_typing(cls, base)

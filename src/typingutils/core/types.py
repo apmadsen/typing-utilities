@@ -65,7 +65,6 @@ def is_subscripted_generic_type(cls: AnyType) -> bool:
     from typingutils.core.instances import get_generic_arguments
 
     return hasattr(cls, ARGS) and any(get_generic_arguments(cls))
-    # return is_generic_type(cls) and any(get_generic_arguments(cls, include_typevars = False))
 
 @overload
 def get_generic_parameters(obj: TypeParameter | AnyFunction) -> tuple[TypeVar, ...]:
@@ -304,7 +303,7 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
     elif base in (object, TypeParameter,  type[Any], Type[Any]):
         return True
 
-    from typingutils.core.instances import get_generic_arguments, is_type
+    from typingutils.core.instances import get_generic_arguments, check_type
 
     if isinstance(base, abc.Collection):
         for base_cls in cast(Sequence[TypeParameter], base):
@@ -312,12 +311,9 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
                 return True
         return False
 
-    cls_is_type = is_type(cls)
-    base_is_type = is_type(base)
-    cls_is_generic_type = is_generic_type(cls)
-    cls_is_subscripted_generic_type = is_subscripted_generic_type(cls)
-    base_is_generic_type = is_generic_type(base)
-    base_is_subscripted_generic_type = is_subscripted_generic_type(base)
+
+    cls_is_type, cls_is_generic_type, cls_is_subscripted_generic_type = check_type(cls)
+    base_is_type, base_is_generic_type, base_is_subscripted_generic_type = check_type(base)
     base_args: TypeArgs = ()
 
     if base_is_subscripted_generic_type:
