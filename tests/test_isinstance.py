@@ -265,6 +265,12 @@ def test_all_types(comparisons: dict[str, list[tuple[str, str]]]):
 
 
 def test_all_instances(comparisons: dict[str, list[tuple[str, str]]]):
+    assert not isinstance_typing(list)
+    assert isinstance_typing(object)
+    assert not isinstance_typing(type)
+    assert isinstance_typing("abc")
+    assert isinstance_typing([1,2,3])
+
     for instance, is_inst in all_instances:
         result = isinstance_typing(instance)
 

@@ -1,12 +1,7 @@
 [API](/docs/api.md)
+
 # API
 
-## typingutils module
-- [Variables](/docs/api/typingutils/variables.md)
-- [Classes](/docs/api/typingutils/classes.md)
-- [Functions](/docs/api/typingutils/functions.md)
+## [`typingutils` module](/docs/api/typingutils/typingutils.md)
+## [`typingutils.internal` module](/docs/api/typingutils/internal/internal.md)
 
-
-## typingutils.internal module
->These members are mainly intended for internal or specialized usage.
-- [Functions](/docs/api/typingutils-internal/functions.md)
