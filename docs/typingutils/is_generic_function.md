@@ -1,4 +1,4 @@
-[API](/docs/api.md) > [typingutils](/docs/api/typingutils/typingutils.md) > is_generic_function
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > is_generic_function
 
 ## is_generic_function(fn: AnyFunction) -> _bool_
 

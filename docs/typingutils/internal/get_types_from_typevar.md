@@ -1,4 +1,4 @@
-[API](/docs/api.md) > [typingutils](/docs/api/typingutils/typingutils.md) > [internal](/docs/api/typingutils/internal/internal.md)  > get_types_from_typevar
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > [internal](/docs/typingutils/internal/internal.md)  > get_types_from_typevar
 
 ## get_types_from_typevar(typevar: _TypeVarParameter_) -> _TypeParameter | UnionParameter_
 

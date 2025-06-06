@@ -1,4 +1,4 @@
-[API](/docs/api.md) > [typingutils](/docs/api/typingutils/typingutils.md) > get_type_name
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > get_type_name
 
 ## get_type_name(cls: _AnyType_) -> _str_
 

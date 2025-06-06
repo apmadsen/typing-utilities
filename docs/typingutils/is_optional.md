@@ -1,4 +1,4 @@
-[API](/docs/api.md) > [typingutils](/docs/api/typingutils/typingutils.md) > is_optional
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > is_optional
 
 ## is_optional(cls: _AnyType_) -> _bool_
 

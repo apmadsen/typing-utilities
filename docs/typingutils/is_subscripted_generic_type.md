@@ -1,4 +1,4 @@
-[API](/docs/api.md) > [typingutils](/docs/api/typingutils/typingutils.md) > is_subscripted_generic_type
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > is_subscripted_generic_type
 
 ## is_subscripted_generic_type(cls: _AnyType_) -> _bool_
 

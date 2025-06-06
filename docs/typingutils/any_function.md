@@ -1,4 +1,4 @@
-[API](/docs/api.md) > [typingutils](/docs/api/typingutils/typingutils.md) > AnyFunction
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > AnyFunction
 
 ## AnyFunction
 

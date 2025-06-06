@@ -1,4 +1,4 @@
-[API](/docs/api.md) > [typingutils](/docs/api/typingutils/typingutils.md) > [internal](/docs/api/typingutils/internal/internal.md)  > get_generic_origin
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > [internal](/docs/typingutils/internal/internal.md)  > get_generic_origin
 
 ## get_generic_origin(cls: _AnyType_) -> _TypeParameter_
 

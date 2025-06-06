@@ -1,4 +1,4 @@
-[API](/docs/api.md) > [typingutils](/docs/api/typingutils/typingutils.md) > get_generic_parameters
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > get_generic_parameters
 
 ## get_generic_parameters(obj: _TypeParameter | AnyFunction_) -> _tuple[type|union|TypeVar, ...]_
 

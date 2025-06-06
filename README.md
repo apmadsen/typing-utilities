@@ -57,9 +57,9 @@ This project differs from Python and other projects in some aspects:
 
 It's not the goal of this project to deliver generic types such as generically enforced lists and dicts.
 
-## API
+## Full documentation
 
-[Go to API documentation](https://github.com/apmadsen/typing-utilities/blob/main/docs/api.md)
+[Go to documentation](https://github.com/apmadsen/typing-utilities/blob/main/docs/documentation.md)
 
 ## Other similar projects
 

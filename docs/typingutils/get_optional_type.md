@@ -1,4 +1,4 @@
-[API](/docs/api.md) > [typingutils](/docs/api/typingutils/typingutils.md) > get_optional_type
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > get_optional_type
 
 ## get_optional_type(cls: _AnyType_) -> _tuple[AnyType, bool]_
 
