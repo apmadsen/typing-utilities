@@ -1,4 +1,4 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > get_generic_arguments
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > get_generic_arguments
 
 ## get_generic_arguments(obj: _Any_) -> _tuple[type|union, ...]_
 

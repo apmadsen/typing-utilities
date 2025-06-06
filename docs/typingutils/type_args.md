@@ -1,4 +1,4 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > TypeArgs
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > TypeArgs
 
 ## TypeArgs
 

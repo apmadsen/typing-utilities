@@ -1,4 +1,4 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > UnionParameter
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > UnionParameter
 
 ## UnionParameter
 

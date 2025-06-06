@@ -1,4 +1,4 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > is_union
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > is_union
 
 ## is_union(cls: _AnyType_) -> _bool_
 

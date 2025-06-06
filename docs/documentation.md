@@ -2,6 +2,6 @@
 
 # Documentation
 
-### [`typingutils` module](/docs/typingutils/typingutils.md)
-### [`typingutils.internal` module](/docs/typingutils/internal/internal.md)
+### [`typingutils` module](/docs/typingutils/module.md)
+### [`typingutils.internal` module](/docs/typingutils/internal/module.md)
 

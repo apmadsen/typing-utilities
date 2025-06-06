@@ -1,4 +1,4 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > get_type_name
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > get_type_name
 
 ## get_type_name(cls: _AnyType_) -> _str_
 

@@ -1,4 +1,4 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > check_type
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > check_type
 
 ## check_type(obj: _Any_) -> _TypeCheck_
 

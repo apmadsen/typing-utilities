@@ -1,4 +1,4 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > TypeCheck
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > TypeCheck
 
 # `TypeCheck` class
 

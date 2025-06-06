@@ -1,4 +1,4 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > is_type
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > is_type
 
 ## is_type(obj: Any) -> _bool_
 

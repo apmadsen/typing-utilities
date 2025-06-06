@@ -1,4 +1,4 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > internal
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > internal
 
 # `typingutils.internal` module
 

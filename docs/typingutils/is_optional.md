@@ -1,4 +1,4 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > is_optional
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > is_optional
 
 ## is_optional(cls: _AnyType_) -> _bool_
 

@@ -1,4 +1,4 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/typingutils.md) > TypeVarParameter
+[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > TypeVarParameter
 
 ## TypeVarParameter
 
