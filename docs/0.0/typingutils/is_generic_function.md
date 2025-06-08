@@ -1,4 +1,7 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > is_generic_function
+[Documentation](/docs/documentation.md) >
+ [v0.0](/docs/0.0/version.md) >
+  [typingutils](/docs/0.0/typingutils/module.md) >
+   is_generic_function
 
 ## is_generic_function(fn: AnyFunction) -> _bool_
 

@@ -1,7 +1,6 @@
 [Documentation](/docs/documentation.md)
 
-# Documentation
+# Typing Utilities documentation
 
-### [`typingutils` module](/docs/typingutils/module.md)
-### [`typingutils.internal` module](/docs/typingutils/internal/module.md)
+### [Version 0.0](0.0/version.md)
 

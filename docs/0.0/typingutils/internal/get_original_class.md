@@ -1,4 +1,8 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > [internal](/docs/typingutils/internal/module.md)  > get_original_class
+[Documentation](/docs/documentation.md) >
+ [v0.0](/docs/0.0/version.md) >
+  [typingutils](/docs/0.0/typingutils/module.md) >
+   [internal](/docs/0.0/typingutils/internal/module.md) >
+    get_original_class
 
 ## get_original_class(cls: _AnyType_) -> _TypeParameter_
 

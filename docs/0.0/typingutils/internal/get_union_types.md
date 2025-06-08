@@ -1,4 +1,8 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > [internal](/docs/typingutils/internal/module.md)  > get_union_types
+[Documentation](/docs/documentation.md) >
+ [v0.0](/docs/0.0/version.md) >
+  [typingutils](/docs/0.0/typingutils/module.md) >
+   [internal](/docs/0.0/typingutils/internal/module.md) >
+    get_union_types
 
 ## get_union_types(cls: _UnionParameter_) -> _TypeParameter_
 

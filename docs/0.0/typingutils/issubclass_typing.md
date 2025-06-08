@@ -1,4 +1,7 @@
-[Documentation](/docs/documentation.md) > [typingutils](/docs/typingutils/module.md) > issubclass_typing
+[Documentation](/docs/documentation.md) >
+ [v0.0](/docs/0.0/version.md) >
+  [typingutils](/docs/0.0/typingutils/module.md) >
+   issubclass_typing
 
 ## issubclass_typing(cls: _AnyType_, base: _AnyType | TypeArgs_) -> _bool_
 
