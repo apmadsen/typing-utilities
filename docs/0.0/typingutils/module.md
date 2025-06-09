@@ -2,15 +2,15 @@
  [v0.0](/docs/0.0/version.md) >
   typingutils
 
-# `typingutils` module
+# typingutils module
 
 ## Modules
 
-### [`typingutils.internal` module](internal/module.md)
+### [internal](internal/module.md)
 
 ## Classes
 
-### [`TypeCheck`](typecheck.md)
+### [TypeCheck](typecheck.md)
 
 ## Functions
 

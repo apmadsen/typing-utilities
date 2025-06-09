@@ -4,4 +4,4 @@
 
 ## Modules
 
-### [`typingutils` module](typingutils/module.md)
+### [typingutils](typingutils/module.md)
