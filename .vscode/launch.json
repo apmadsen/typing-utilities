@@ -13,12 +13,14 @@
             "justMyCode": false
         },
         {
-            "name": "pytest coverage",
+            "name": "Python Test Coverage",
             "type": "debugpy",
             "request": "launch",
             "module": "pytest",
             "console": "integratedTerminal",
             "args": [
+                "-vv",
+                "-s",
                 "--cov-branch",
                 "--cov-report",
                 "term-missing",
@@ -26,6 +28,6 @@
                 "--cov-config=.coveragerc",
                 "./tests",
             ]
-        }
+        },
     ]
 }

@@ -305,7 +305,7 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
 
     from typingutils.core.instances import get_generic_arguments, check_type
 
-    if isinstance(base, abc.Collection):
+    if isinstance(base, tuple):
         for base_cls in cast(Sequence[TypeParameter], base):
             if issubclass_typing(cls, base_cls):
                 return True

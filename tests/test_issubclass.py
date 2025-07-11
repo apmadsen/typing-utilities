@@ -3,12 +3,13 @@ from typing import Any, Type, Iterable, TypeVar, Generic, cast
 from collections import abc, deque, defaultdict, OrderedDict, ChainMap
 from types import NoneType
 from pytest import raises as assert_raises, fixture
+from enum import Enum
 
 from typingutils import issubclass_typing, get_type_name, get_type_name, TypeParameter, UnionParameter
 
 from tests.other_impl.issubclass import comparison_generator
 from tests.testcase_generators.issubclass import create_testcases_for_issubclass
-from tests.generic_classes import DerivedClass1, DerivedClass2, ParentClass, BaseClass
+from tests.generic_classes import DerivedClass1, DerivedClass2, ParentClass, BaseClass, Enumeration
 
 
 subclass_assertions: list[tuple[TypeParameter | tuple[TypeParameter, ...], tuple[TypeParameter | UnionParameter, ...]]] = [
@@ -99,6 +100,10 @@ subclass_assertions: list[tuple[TypeParameter | tuple[TypeParameter, ...], tuple
         ParentClass,
         BaseClass
     )),
+    (Enumeration, (
+        object,
+        Enum
+    ))
 ]
 
 all_types = set([ type_ for _, types in subclass_assertions for type_ in types ])
@@ -171,6 +176,8 @@ def test_explicit_assertions(comparisons: dict[str, list[tuple[str, str]]]):
 
 
                 print(f"Testing issubclass_typing({get_type_name(test_type)}, {get_type_name(type_)}) ==> {result}")
+                if not result:
+                    issubclass_typing(test_type, type_)
                 assert result
 
                 for impl, result_comparison in comparison_generator(test_type, type_):
@@ -180,7 +187,6 @@ def test_explicit_assertions(comparisons: dict[str, list[tuple[str, str]]]):
 
 def test_tuple_bases(comparisons: dict[str, list[tuple[str, str]]]):
     for cls, base, expected in cast(tuple[tuple[TypeParameter, TypeParameter|tuple[TypeParameter], bool]], (
-        (str, [str, int, bool], True),
         (str, (str, int, bool), True),
         (str, (int, bool), False),
     )):

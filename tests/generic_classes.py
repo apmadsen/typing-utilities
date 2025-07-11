@@ -1,7 +1,7 @@
 # pyright: basic
 from __future__ import annotations
 from typing import TypeVar, Generic, Mapping, Iterator
-
+from enum import Enum
 
 T = TypeVar('T')
 Tstr = TypeVar('Tstr', bound=str)
@@ -41,3 +41,7 @@ class DerivedClass(BaseClass): ...
 class DerivedClass1(DerivedClass): ...
 
 class DerivedClass2(ParentClass, BaseClass): ...
+
+class Enumeration(Enum):
+    OPT1 = 1
+    OPT3 = 2

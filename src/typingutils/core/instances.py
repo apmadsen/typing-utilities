@@ -234,7 +234,7 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
     elif type(obj) is NoneType and cls in (object, type[Any], Type[Any], NoneType):
         return True # None is derived from type and object
 
-    if isinstance(cls, abc.Collection):
+    if isinstance(cls, tuple):
         for cls1 in cls:
             if isinstance_typing(obj, cls1):
                 return True
