@@ -4,9 +4,13 @@
    [internal](/docs/0.0/typingutils/internal/module.md) >
     get_original_class
 
-## get_original_class(cls: _AnyType_) -> _TypeParameter_
+# get_original_class(cls: _[AnyType](../any_type.md)_) -> _[TypeParameter](../type_parameter.md)_
 
 The `get_original_class` function returns the original generic type from a class instance. This is useful for generic types because instances of these doesn't derive from them, thus having no generic arguments specified. Will even work when called from within a constructor of a class. Note that it doesn't work with builtin generic types like list[T].
+
+## Parameters
+
+- obj `Any`: An instance of a class.
 
 ### Example:
 ```python

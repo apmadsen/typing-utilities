@@ -46,7 +46,6 @@ def is_generic_type(cls: AnyType) -> bool:
     else:
         return False
 
-
 def _is_special_generic_type(cls: AnyType) -> bool:
     """
     Indicates if type is a special generic type from the typing module.
@@ -60,19 +59,21 @@ def _is_special_generic_type(cls: AnyType) -> bool:
 
     return type(cls) in GENERIC_SPECIAL_TYPES # pragma: no cover
 
-
 def is_subscripted_generic_type(cls: AnyType) -> bool:
+    """Indicates whether or not `cls` is a subscripted generic type as `list[str]` is a subscripted generic type of `list[T]` etc.
+
+    Args:
+        cls (AnyType): A type.
+
+    Returns:
+        bool: Returns True if cls is a subscripted generic type.
+    """
     from typingutils.core.instances import get_generic_arguments
 
     return hasattr(cls, ARGS) and any(get_generic_arguments(cls))
 
 @overload
 def get_generic_parameters(obj: TypeParameter | AnyFunction) -> tuple[TypeVar, ...]:
-    ...
-@overload
-def get_generic_parameters(obj: TypeParameter | AnyFunction, *, extract_types_from_typevars: bool = False) -> TypeArgs:
-    ...
-def get_generic_parameters(obj: TypeParameter | AnyFunction, *, extract_types_from_typevars: bool = False) -> TypeArgs:
     """
     Returns the generic typevars required to create a subscripted generic type (or function, python 3.12).
     of an object. Will even work when called from within a constructor of the class.
@@ -88,6 +89,27 @@ def get_generic_parameters(obj: TypeParameter | AnyFunction, *, extract_types_fr
     Returns:
         TypeArgs: A sequence of types.
     """
+    ...
+@overload
+def get_generic_parameters(obj: TypeParameter | AnyFunction, *, extract_types_from_typevars: bool = False) -> TypeArgs:
+    """
+    Returns the generic typevars required to create a subscripted generic type (or function, python 3.12).
+    of an object. Will even work when called from within a constructor of the class.
+
+    Examples:
+        T = TypeVar('T')
+        class GenClass(Generic[T]): pass
+        a = get_generic_parameters(GenClass[str]) => ~T
+
+    Args:
+        obj (TypeParameter | AnyFunction): A type or function.
+        extract_types_from_typevars (bool): Tries to extract types from TypeVars (if bound).
+
+    Returns:
+        TypeArgs: A sequence of types.
+    """
+    ...
+def get_generic_parameters(obj: TypeParameter | AnyFunction, *, extract_types_from_typevars: bool = False) -> TypeArgs:
     for attr in (PARAMETERS, TYPE_PARAMS): # __type_params__ is new in python 3.12
         if hasattr(obj, attr):
             if params := getattr(obj, attr):
@@ -97,7 +119,6 @@ def get_generic_parameters(obj: TypeParameter | AnyFunction, *, extract_types_fr
                 )
 
     return ()
-
 
 def get_type_name(cls: AnyType) -> str:
     """
@@ -157,7 +178,6 @@ def get_type_name(cls: AnyType) -> str:
     else:
         raise Exception(f"Unable to get name of type {cls}") # pragma: no cover
 
-
 def get_generic_origin(cls: AnyType) -> TypeParameter:
     """
     Gets the generic origin of a type i.e. the type a generic type originates from.
@@ -166,7 +186,7 @@ def get_generic_origin(cls: AnyType) -> TypeParameter:
         cls (AnyType): A type.
 
     Raises:
-        ValueError: _description_
+        ValueError: Raises a ValueError exception if cls is a typevar.
 
     Returns:
         TypeParameter: A type.
@@ -179,7 +199,6 @@ def get_generic_origin(cls: AnyType) -> TypeParameter:
         return UnionType # pyright: ignore[reportReturnType]
 
     return cast(type, cls)
-
 
 def get_union_types(cls: UnionParameter) -> TypeArgs:
     """
@@ -205,7 +224,6 @@ def get_union_types(cls: UnionParameter) -> TypeArgs:
     else:
         raise ValueError(f"Type {get_type_name(cls)} is not a union") # pragma: no cover
 
-
 def is_union(cls: AnyType) -> bool:
     """
     Indicates whenter or not type is a union of types.
@@ -223,7 +241,6 @@ def is_union(cls: AnyType) -> bool:
         return True
     else:
        return get_generic_origin(cast(TypeParameter, cls)) is Union
-
 
 def is_optional(cls: AnyType) -> bool:
     """
@@ -243,8 +260,6 @@ def is_optional(cls: AnyType) -> bool:
     elif isinstance(cls, TypeVar):
         return is_optional(get_types_from_typevar(cls))
     return False
-
-
 
 def get_optional_type(cls: AnyType) -> tuple[AnyType, bool]:
     """
@@ -276,7 +291,6 @@ def get_optional_type(cls: AnyType) -> tuple[AnyType, bool]:
         return get_optional_type(get_types_from_typevar(cls))
 
     return cast(type, cls), False
-
 
 def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
     """
@@ -359,6 +373,15 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
     return issubclass(cls, base) # fallback # pyright: ignore[reportArgumentType] # pragma: no cover
 
 def get_types_from_typevar(typevar: TypeVarParameter) -> TypeParameter | UnionParameter:
+    """The `get_types_from_typevar` function returns the type constraints from the typevar or typevar tuple. If no constraints are specified, `type[Any]` is returned.
+    If typevar is a TypeVarTuple (new in Python 3.11), `tuple[type[Any], ...]` is returned.
+
+    Args:
+        typevar (TypeVarParameter): A typevar or typevar tuple.
+
+    Returns:
+        TypeParameter | UnionParameter: Returns the type constraints.
+    """
     if isinstance(typevar, TypeVar) and hasattr(typevar, BOUND):
         if bound := getattr(typevar, BOUND):
             return Union[bound]

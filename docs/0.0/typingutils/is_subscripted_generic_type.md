@@ -3,9 +3,13 @@
   [typingutils](/docs/0.0/typingutils/module.md) >
    is_subscripted_generic_type
 
-## is_subscripted_generic_type(cls: _AnyType_) -> _bool_
+# is_subscripted_generic_type(cls: _[AnyType](any_type.md)_) -> _bool_
 
 The `is_subscripted_generic_type` function indicates whether or not `cls` is a subscripted generic type as `list[str]` is a subscripted generic type of `list[T]` etc.
+
+## Parameters
+
+- cls `AnyType`: A type.
 
 ### Example:
 ```python

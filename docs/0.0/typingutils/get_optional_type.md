@@ -3,9 +3,13 @@
   [typingutils](/docs/0.0/typingutils/module.md) >
    get_optional_type
 
-## get_optional_type(cls: _AnyType_) -> _tuple[AnyType, bool]_
+# get_optional_type(cls: _[AnyType](any_type.md)_) -> _tuple[[AnyType](any_type.md), bool]_
 
 The `get_optional_type` function extracts any types from `cls` regardless if it's an ordinary type, a union or a `typing.Optional[T]` object, and returns it along with a bool indicatig if optional or not.
+
+## Parameters
+
+- cls `AnyType`: A type.
 
 ### Example:
 ```python

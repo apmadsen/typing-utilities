@@ -119,7 +119,7 @@ def get_generic_arguments(obj: Any) -> TypeArgs:
         a = get_generic_arguments(GenClass[str]) => (str,)
 
     Args:
-        obj (Any): A type, object or instance of an object.
+        obj (Any): An instance of an object.
 
     Returns:
         TypeArgs: A sequence of types.
@@ -139,7 +139,6 @@ def get_generic_arguments(obj: Any) -> TypeArgs:
 
 
     return ()
-
 
 def is_type(obj: Any) -> bool:
     """
@@ -166,8 +165,6 @@ def is_type(obj: Any) -> bool:
 
     return isinstance(obj, type) or is_generic_type(obj) or is_subscripted_generic_type(obj)
 
-
-
 def check_type(obj: Any) -> TypeCheck:
     """
     Checks if object is a type.
@@ -186,7 +183,6 @@ def check_type(obj: Any) -> TypeCheck:
         return TypeCheck(True, False, False)
     else:
         return TypeCheck(False, False, False)
-
 
 @overload
 def isinstance_typing(obj: Any) -> bool:
@@ -208,7 +204,7 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs, *, recursive: bool = Fa
 
     Args:
         obj (Any): An object or instance of an object.
-        cls (type): A type or sequence of types.
+        cls (type): A type.
 
     Returns:
         bool: A boolean value indicating if object is an instance of the specified type/types.

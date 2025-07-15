@@ -3,9 +3,13 @@
   [typingutils](/docs/0.0/typingutils/module.md) >
    get_type_name
 
-## get_type_name(cls: _AnyType_) -> _str_
+# get_type_name(cls: _[AnyType](any_type.md)_) -> _str_
 
 The `get_type_name` function returns the name of type `cls`. It's used throughout the tests of this package and for documentational purposes.
+
+## Parameters
+
+- cls `AnyType`: A type.
 
 ### Example:
 ```python

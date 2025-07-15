@@ -4,7 +4,7 @@
    [internal](/docs/0.0/typingutils/internal/module.md) >
     get_executing_function
 
-## get_executing_function() -> _AnyFunction | None_
+# get_executing_function() -> _[AnyFunction](../any_function.md) | None_
 
 The `get_executing_function` function returns the executing function from within, enabling retrieval of its generic parameters via the `get_generic_parameters` function.
 

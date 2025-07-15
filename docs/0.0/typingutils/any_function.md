@@ -3,6 +3,6 @@
   [typingutils](/docs/0.0/typingutils/module.md) >
    AnyFunction
 
-## AnyFunction
+# AnyFunction
 
 The `AnyFunction` Variable is an annotation of `types.FunctionType | typing.Callable[..., Any]`

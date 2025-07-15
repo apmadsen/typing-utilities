@@ -4,11 +4,15 @@
    [internal](/docs/0.0/typingutils/internal/module.md) >
     get_types_from_typevar
 
-## get_types_from_typevar(typevar: _TypeVarParameter_) -> _TypeParameter | UnionParameter_
+# get_types_from_typevar(typevar: _[TypeVarParameter](../typevar_parameter.md)_) -> _[TypeParameter](../type_parameter.md) | [UnionParameter](../union_parameter.md)_
 
 The `get_types_from_typevar` function returns the type constraints from the typevar or typevar tuple. If no constraints are specified, `type[Any]` is returned.
 
-If typevar is a TypeVarTuple (new in Python 3.11), `tuple[type[Any], ...]` is returned..
+If typevar is a TypeVarTuple (new in Python 3.11), `tuple[type[Any], ...]` is returned.
+
+## Parameters
+
+- typevar `TypeVarParameter`: A typevar or typevar tuple.
 
 ### Example:
 ```python

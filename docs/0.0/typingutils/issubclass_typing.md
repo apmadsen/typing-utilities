@@ -3,9 +3,16 @@
   [typingutils](/docs/0.0/typingutils/module.md) >
    issubclass_typing
 
-## issubclass_typing(cls: _AnyType_, base: _AnyType | TypeArgs_) -> _bool_
+# issubclass_typing(cls: _[AnyType](any_type.md)_, base: _[AnyType](any_type.md) | [TypeArgs](type_args.md)_) -> _bool_
 
 The `issubclass_typing` function extends the builtin `issubclass(cls, base)` function allowing both `cls` and `base` to be either a type, typevar or union object.
+
+## Parameters
+
+- cls `AnyType`: A type.
+- base `AnyType | TypeArgs`: A type or TypeVar to compare with.
+
+###
 
 ### Example:
 ```python

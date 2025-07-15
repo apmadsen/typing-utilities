@@ -3,8 +3,6 @@ from inspect import stack as get_stack
 from typingutils.core.attributes import TYPE_PARAMS
 from typingutils.core.types import AnyFunction
 
-
-
 def is_generic_function(fn: AnyFunction) -> bool:
     """
     Python 3.12 or newer.

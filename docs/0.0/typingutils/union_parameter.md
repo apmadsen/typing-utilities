@@ -3,7 +3,7 @@
   [typingutils](/docs/0.0/typingutils/module.md) >
    UnionParameter
 
-## UnionParameter
+# UnionParameter
 
 The `UnionParameter` variable is an annotation of `types.UnionType | tuple[TypeParameter, ...]` and matches any type union.
 

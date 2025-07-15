@@ -3,9 +3,13 @@
   [typingutils](/docs/0.0/typingutils/module.md) >
    is_generic_function
 
-## is_generic_function(fn: AnyFunction) -> _bool_
+# is_generic_function(fn: _[AnyFunction](any_function.md)_) -> _bool_
 
 The `is_generic_function` function  indicates whether or not `fn` is a generic function. New in Python 3.12.
+
+## Parameters
+
+- fn `AnyFunction`: A function.
 
 ### Example:
 ```python

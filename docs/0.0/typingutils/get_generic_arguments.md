@@ -3,9 +3,13 @@
   [typingutils](/docs/0.0/typingutils/module.md) >
    get_generic_arguments
 
-## get_generic_arguments(obj: _Any_) -> _tuple[type|union, ...]_
+# get_generic_arguments(obj: _Any_) -> _tuple[type|union, ...]_
 
 The `get_generic_arguments` function returns the types used to create the subscripted generic type or instance `obj` even from within a constructor.
+
+## Parameters
+
+- obj `Any`: An instance of an object.
 
 ### Example:
 ```python

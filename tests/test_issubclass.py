@@ -189,6 +189,7 @@ def test_tuple_bases(comparisons: dict[str, list[tuple[str, str]]]):
     for cls, base, expected in cast(tuple[tuple[TypeParameter, TypeParameter|tuple[TypeParameter], bool]], (
         (str, (str, int, bool), True),
         (str, (int, bool), False),
+        (str, ((int, bool), float), False),
     )):
         result = issubclass_typing(cls, base)
         print(f"Testing issubclass_typing({get_type_name(cls)}, {get_type_name(base)}) ==> {result}")

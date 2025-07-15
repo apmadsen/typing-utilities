@@ -3,6 +3,6 @@
   [typingutils](/docs/0.0/typingutils/module.md) >
    TypeParameter
 
-## TypeParameter
+# TypeParameter
 
 The `TypeParameter` variable is an annotation of `type | type[Any]` and matches any ordinary type.
