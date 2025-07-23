@@ -72,6 +72,20 @@ def is_subscripted_generic_type(cls: AnyType) -> bool:
 
     return hasattr(cls, ARGS) and any(get_generic_arguments(cls))
 
+def is_variadic_tuple_type(cls: type[tuple[Any, ...]]) -> bool:
+    """Indicates whether or not `cls` is a variadic tuple type, eg. `tuple[str, ...]`.
+
+    Args:
+        cls (type[tuple[Any, ...]]): A type.
+
+    Returns:
+        bool: Returns True if cls is a variadic tuple type.
+    """
+    from typingutils.core.instances import get_generic_arguments
+    args = get_generic_arguments(cls)
+
+    return len(args) == 2 and args[1] == Ellipsis and args[0] != Ellipsis # pyright: ignore[reportUnnecessaryComparison]
+
 @overload
 def get_generic_parameters(obj: TypeParameter | AnyFunction) -> tuple[TypeVar, ...]:
     """

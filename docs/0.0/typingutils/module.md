@@ -25,6 +25,7 @@
 ### [is_subscripted_generic_type](is_subscripted_generic_type.md)
 ### [is_type](is_type.md)
 ### [is_union](is_union.md)
+### [is_variadic_tuple_type](is_variadic_tuple_type.md)
 ### [isinstance_typing](isinstance_typing.md)
 ### [issubclass_typing](issubclass_typing.md)
 

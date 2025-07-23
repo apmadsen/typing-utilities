@@ -5,7 +5,7 @@ from pytest import raises as assert_raises
 
 from typingutils import (
     is_type, is_union, get_type_name, is_optional, get_optional_type, TypeParameter, UnionParameter, TypeVarParameter,
-    is_subscripted_generic_type, is_generic_type, get_generic_arguments, get_generic_parameters
+    is_subscripted_generic_type, is_generic_type, get_generic_arguments, get_generic_parameters, is_variadic_tuple_type
 )
 from typingutils.core.compat.typevar_tuple import TypeVarTuple
 from typingutils.internal import get_generic_origin, get_original_class, get_union_types, get_types_from_typevar, construct_generic_type
@@ -328,3 +328,11 @@ def test_get_original_class():
 
     assert get_original_class(gc) == GenericClass[str]
 
+def test_is_variadic_tuple_type():
+    assert not is_variadic_tuple_type(str) # pyright: ignore[reportArgumentType]
+    assert not is_variadic_tuple_type(tuple[Any]) # pyright: ignore[reportArgumentType]
+    assert not is_variadic_tuple_type(tuple[str, int])
+    assert not is_variadic_tuple_type(tuple[str, int, bool])
+    assert is_variadic_tuple_type(tuple[str, ...])
+    assert is_variadic_tuple_type(tuple[int, ...])
+    assert is_variadic_tuple_type(tuple[Any, ...])

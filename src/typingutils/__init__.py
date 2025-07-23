@@ -4,7 +4,7 @@ from typingutils.core.instances import (
 )
 from typingutils.core.types import (
     get_type_name, issubclass_typing, is_optional, get_optional_type,
-    is_generic_type, is_union, get_generic_parameters,
+    is_generic_type, is_union, get_generic_parameters, is_variadic_tuple_type,
     TypeParameter, UnionParameter, AnyType, AnyFunction,
     TypeArgs, TypeVarParameter
 )
@@ -29,6 +29,7 @@ __all__ = [
     'is_generic_function',
     'is_optional',
     'is_union',
+    'is_variadic_tuple_type',
     'get_type_name',
     'get_optional_type',
     'get_generic_arguments',
