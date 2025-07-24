@@ -14,7 +14,7 @@ from typingutils.core.attributes import ORIGIN
 from tests.testcase_generators.issubclass import create_testcases_for_issubclass
 from tests.testcase_generators.types import create_testcases_for_types
 from tests.generic_types import non_generic_types, generic_types
-from tests.generic_classes import ParentClass, GenericClass1
+from tests.generic_classes import ParentClass, GenericClass1, GenericSubClass1, GenericSubClass2
 
 
 issubclass_testcases = list(create_testcases_for_issubclass())
@@ -119,6 +119,9 @@ def test_is_generic_type():
 
     assert not is_generic_type(TypeVar("T"))
     assert is_generic_type(GenericClass1)
+    assert is_generic_type(GenericSubClass1)
+    assert is_generic_type(GenericSubClass2)
+
 
     for testcase in issubclass_testcases:
         if testcase.base not in tested_base:

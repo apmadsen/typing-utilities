@@ -18,6 +18,8 @@ class GenericClass1(Generic[T]):
 
 class GenericSubClass1(GenericClass1[T]):
     pass
+class GenericSubClass2(GenericSubClass1[T]):
+    pass
 
 class GenericClass4(Mapping[Tkey, Tvalue]):
     def __getitem__(self, k: Tkey) -> Tvalue:

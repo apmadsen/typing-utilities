@@ -39,7 +39,7 @@ def is_generic_type(cls: AnyType) -> bool:
         from typingutils.core.instances import _extract_args # pyright: ignore[reportPrivateUsage]
         parameters, args, _ = _extract_args(cls)
         return any(parameters) if parameters is not None else args is None
-    elif hasattr(cls, BASES) and Generic in getattr(cls, BASES):
+    elif hasattr(cls, BASES) and ( bases := getattr(cls, BASES) ) and ( Generic in bases or [ base for base in bases if is_generic_type(base) ] ):
         return True
     elif type(cls) in GENERIC_BASE_TYPES:
         return True # pragma: no cover

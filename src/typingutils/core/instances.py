@@ -132,7 +132,7 @@ def get_generic_arguments(obj: Any) -> TypeArgs:
         orig_class = get_original_class(obj)
         if orig_class is not type(obj):
             return cast(Callable[[Any], tuple[type, ...]], get_generic_arguments)(orig_class)
-    elif isinstance(obj, type) and Generic in obj.__bases__:
+    elif isinstance(obj, type) and is_generic_type(obj):
         orig_class = get_original_class(obj)
         if orig_class != obj:
             return cast(Callable[[Any], tuple[type, ...]], get_generic_arguments)(orig_class)
