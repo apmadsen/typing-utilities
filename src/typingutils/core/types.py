@@ -1,7 +1,6 @@
 from typing import Annotated, Type, TypeVar, Sequence, Any, Generic, Union, Callable, cast, overload
 from typing import _GenericAlias, GenericAlias, _SpecialGenericAlias, _UnionGenericAlias, _SpecialForm # pyright: ignore[reportUnknownVariableType, reportAttributeAccessIssue, reportPrivateUsage ]
 from types import UnionType, NoneType, EllipsisType, FunctionType
-from collections import abc
 
 from typingutils.core.compat.typevar_tuple import TypeVarTuple
 from typingutils.core.attributes import (
@@ -271,8 +270,7 @@ def is_optional(cls: AnyType) -> bool:
         classes = getattr(cls, ARGS)
         if NoneType in classes:
             return True
-    elif isinstance(cls, TypeVar):
-        return is_optional(get_types_from_typevar(cls))
+
     return False
 
 def get_optional_type(cls: AnyType) -> tuple[AnyType, bool]:
@@ -300,9 +298,6 @@ def get_optional_type(cls: AnyType) -> tuple[AnyType, bool]:
             return classes[0], optional
         else:
             return cast(type, Union[tuple(classes)]), optional
-
-    elif isinstance(cls, TypeVar):
-        return get_optional_type(get_types_from_typevar(cls))
 
     return cast(type, cls), False
 

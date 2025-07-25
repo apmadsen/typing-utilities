@@ -1,4 +1,4 @@
-from typing import Callable, Type, TypeVar, Any, Generic, Union, NamedTuple, overload, cast
+from typing import Callable, Type, TypeVar, Any, Union, NamedTuple, overload, cast
 from types import UnionType, NoneType
 from collections import abc
 from inspect import stack as get_stack
