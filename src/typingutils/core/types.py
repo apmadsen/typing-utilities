@@ -1,7 +1,6 @@
 from typing import Annotated, Type, TypeVar, Sequence, Any, Generic, Union, Callable, cast, overload
 from typing import _GenericAlias, GenericAlias, _SpecialGenericAlias, _UnionGenericAlias, _SpecialForm # pyright: ignore[reportUnknownVariableType, reportAttributeAccessIssue, reportPrivateUsage ]
 from types import UnionType, NoneType, EllipsisType, FunctionType
-from collections import abc
 
 from typingutils.core.compat.typevar_tuple import TypeVarTuple
 from typingutils.core.attributes import (
@@ -39,7 +38,7 @@ def is_generic_type(cls: AnyType) -> bool:
         from typingutils.core.instances import _extract_args # pyright: ignore[reportPrivateUsage]
         parameters, args, _ = _extract_args(cls)
         return any(parameters) if parameters is not None else args is None
-    elif hasattr(cls, BASES) and Generic in getattr(cls, BASES):
+    elif hasattr(cls, BASES) and ( bases := getattr(cls, BASES) ) and ( Generic in bases or [ base for base in bases if is_generic_type(base) ] ):
         return True
     elif type(cls) in GENERIC_BASE_TYPES:
         return True # pragma: no cover
@@ -71,6 +70,20 @@ def is_subscripted_generic_type(cls: AnyType) -> bool:
     from typingutils.core.instances import get_generic_arguments
 
     return hasattr(cls, ARGS) and any(get_generic_arguments(cls))
+
+def is_variadic_tuple_type(cls: type[tuple[Any, ...]]) -> bool:
+    """Indicates whether or not `cls` is a variadic tuple type, eg. `tuple[str, ...]`.
+
+    Args:
+        cls (type[tuple[Any, ...]]): A type.
+
+    Returns:
+        bool: Returns True if cls is a variadic tuple type.
+    """
+    from typingutils.core.instances import get_generic_arguments
+    args = get_generic_arguments(cls)
+
+    return len(args) == 2 and args[1] == Ellipsis and args[0] != Ellipsis # pyright: ignore[reportUnnecessaryComparison]
 
 @overload
 def get_generic_parameters(obj: TypeParameter | AnyFunction) -> tuple[TypeVar, ...]:
@@ -257,8 +270,7 @@ def is_optional(cls: AnyType) -> bool:
         classes = getattr(cls, ARGS)
         if NoneType in classes:
             return True
-    elif isinstance(cls, TypeVar):
-        return is_optional(get_types_from_typevar(cls))
+
     return False
 
 def get_optional_type(cls: AnyType) -> tuple[AnyType, bool]:
@@ -286,9 +298,6 @@ def get_optional_type(cls: AnyType) -> tuple[AnyType, bool]:
             return classes[0], optional
         else:
             return cast(type, Union[tuple(classes)]), optional
-
-    elif isinstance(cls, TypeVar):
-        return get_optional_type(get_types_from_typevar(cls))
 
     return cast(type, cls), False
 
