@@ -255,3 +255,25 @@ def test_multilevel_types(comparisons: dict[str, list[tuple[str, str]]]):
                 comparisons[impl].append((f"Comparing {impl}.issubclass({get_type_name(cls)}, {get_type_name(base)})", f"{result_comparison} != {result}"))
 
 
+def test_tuples(comparisons: dict[str, list[tuple[str, str]]]):
+    for cls, base, expected in (
+        (tuple[str], tuple[str], True),
+        (tuple[str], tuple[str, ...], False),
+        (tuple[str], tuple[str, str], False),
+        (tuple[str], tuple[Any], True),
+        (tuple[str], tuple[Any, ...], False),
+        (tuple[str], tuple[str, str], False),
+        (tuple[str], list[str], False),
+    ):
+
+        result = issubclass_typing(cls, base)
+        print(f"Testing issubclass_typing({get_type_name(cls)}, {get_type_name(base)}) ==> {result}")
+
+        if result != expected:
+            issubclass_typing(cls, base)
+
+        assert result == expected
+
+        for impl, result_comparison in comparison_generator(cls, base):
+            if result != result_comparison:
+                comparisons[impl].append((f"Comparing {impl}.issubclass({get_type_name(cls)}, {get_type_name(base)})", f"{result_comparison} != {result}"))

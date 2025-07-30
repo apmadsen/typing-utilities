@@ -5,7 +5,7 @@ from inspect import stack as get_stack
 
 from typingutils.core.attributes import  ORIGIN, ORIGINAL_CLASS, ARGS, TYPE_PARAMS
 from typingutils.core.types import (
-    TypeParameter, TypeVarParameter, UnionParameter, AnyType, SetOfAny, TypeArgs,
+    TypeParameter, TypeVarParameter, UnionParameter, AnyType, SetOfAny, TypeArgs, is_variadic_tuple_type,
     is_subscripted_generic_type, is_generic_type, get_generic_origin, issubclass_typing
 )
 
@@ -249,8 +249,14 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
         return True
 
     obj_has_orig_cls_attr = hasattr(obj, ORIGINAL_CLASS)
+    *_, cls_is_subscripted_generic_type = check_type(cls)
     cls_has_args_attr = hasattr(cls, ARGS)
     cls_has_origin_attr = hasattr(cls, ORIGIN)
+    cls_origin = get_generic_origin(cast(AnyType, cls))
+    cls_args: TypeArgs = ()
+
+    if cls_is_subscripted_generic_type:
+        cls_args = get_generic_arguments(cls)
 
     if obj_has_orig_cls_attr and getattr(obj, ORIGINAL_CLASS) != type:
         origin = getattr(obj, ORIGINAL_CLASS)
@@ -258,7 +264,8 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
             return True
 
     if not obj_has_orig_cls_attr and cls_has_origin_attr and cls_has_args_attr and set(get_generic_arguments(cls)) == SetOfAny:
-        cls = getattr(cls, ORIGIN)
+       if cls_origin != tuple:
+            cls = cls_origin
 
     if not is_subscripted_generic_type(cast(TypeParameter | UnionParameter, cls)) and not is_generic_type(cast(TypeParameter, type(obj))):
         return isinstance(obj, cast(type, cls))
@@ -267,27 +274,46 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
         from typingutils.core.types import get_types_from_typevar
         return isinstance_typing(obj, get_types_from_typevar(cls))
 
+    if recursive and cls_args:
+        if issubclass(cls_origin, tuple) and isinstance(obj, abc.Sequence):
+            if len(cast(abc.Sized, obj)) == 0:
+                return False
+            elif not is_variadic_tuple_type(cast(type[tuple[Any]], cls)):
+                if set(cls_args) == SetOfAny:
+                    return len(cast(abc.Sized, obj)) == 1
+                elif len(cast(abc.Sized, obj)) == len(cls_args) and not [
+                    t for t in zip(cast(abc.Sequence[Any], obj), cls_args)
+                    if not isinstance_typing(t[0], t[1], recursive = recursive)
+                ]:
+                    return True
+                else:
+                    return False
+            else:
+                if not [
+                    t for t in zip(cast(abc.Sequence[Any], obj), cls_args[0:-1])
+                    if not isinstance_typing(t[0], t[1], recursive = recursive)
+                ]:
+                    return True
+                else:
+                    return False
 
-    if recursive and ( args := get_generic_arguments(cls) ):
-        cls_origin = cast(type[Any], getattr(cls, ORIGIN) if cls_has_origin_attr else cls)
-
-        if issubclass(cls_origin, abc.Sequence) and isinstance(obj, abc.Sequence) and isinstance_typing(obj, cast(type[Any], cls_origin)):
+        elif issubclass(cls_origin, abc.Sequence) and isinstance(obj, abc.Sequence) and isinstance_typing(obj, cast(type[Any], cls_origin)):
             for item in cast(abc.Sequence[Any], obj):
-                if not isinstance_typing(item, args[0]):
+                if not isinstance_typing(item, cls_args[0]):
                     return False
             return True
 
         if issubclass(cls_origin, abc.Mapping) and isinstance(obj, abc.Mapping) and isinstance_typing(obj, cast(type[Any], cls_origin)):
             for key in cast(abc.Mapping[Any, Any], obj):
-                if not isinstance_typing(key, args[0]):
+                if not isinstance_typing(key, cls_args[0]):
                     return False
-                if not isinstance_typing(obj[key], args[1]):
+                if not isinstance_typing(obj[key], cls_args[1]):
                     return False
             return True
 
         if issubclass(cls_origin, abc.Set) and isinstance(obj, abc.Set) and isinstance_typing(obj, cast(type[Any], cls_origin)):
             for item in cast(abc.Set[Any], obj):
-                if not isinstance_typing(item, args[0]):
+                if not isinstance_typing(item, cls_args[0]):
                     return False
             return True
 
@@ -296,7 +322,7 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
             if isinstance_typing(obj, abc.Iterator):
                 raise Exception("Recursive instance checks on iterators cannot be done at it would deplete the iterator for further use")
             for item in cast(abc.Iterable[Any], obj):
-                if not isinstance_typing(item, args[0]):
+                if not isinstance_typing(item, cls_args[0]):
                     return False
             return True
 

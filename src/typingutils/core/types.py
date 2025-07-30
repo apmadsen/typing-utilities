@@ -71,11 +71,11 @@ def is_subscripted_generic_type(cls: AnyType) -> bool:
 
     return hasattr(cls, ARGS) and any(get_generic_arguments(cls))
 
-def is_variadic_tuple_type(cls: type[tuple[Any, ...]]) -> bool:
+def is_variadic_tuple_type(cls: type[tuple[Any, ...]] | type[tuple[Any]]) -> bool:
     """Indicates whether or not `cls` is a variadic tuple type, eg. `tuple[str, ...]`.
 
     Args:
-        cls (type[tuple[Any, ...]]): A type.
+        cls (type[tuple[Any, ...]] | type[tuple[Any]]): A type.
 
     Returns:
         bool: Returns True if cls is a variadic tuple type.
@@ -337,13 +337,19 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
 
     cls_is_type, cls_is_generic_type, cls_is_subscripted_generic_type = check_type(cls)
     base_is_type, base_is_generic_type, base_is_subscripted_generic_type = check_type(base)
+    cls_args: TypeArgs = ()
     base_args: TypeArgs = ()
 
+    if cls_is_subscripted_generic_type:
+        cls_args = get_generic_arguments(cls)
     if base_is_subscripted_generic_type:
         base_args = get_generic_arguments(base)
 
     if base_args and set(base_args) == SetOfAny:
-        base = get_generic_origin(cast(TypeParameter | UnionParameter | TypeVar, base))
+        if (origin := get_generic_origin(cast(AnyType, base))) and origin != tuple:
+            base = origin
+        elif len(cls_args) == len(base_args):
+            return True # any single item tuple is a subclass of tuple[Any]
 
     if is_union(base):
         classes = get_generic_arguments(base)
