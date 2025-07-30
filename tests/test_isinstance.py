@@ -361,16 +361,25 @@ def test_recursive(comparisons: dict[str, list[tuple[str, str]]]):
         def __iter__(self):
             return iter(("a", "b", "c"))
 
+
     for obj, cls, expected in cast(tuple[tuple[object, Tuple[TypeParameter|UnionParameter, ...], bool]], (
         ("abc", Iterable[str], True),
         (123, Iterable[str], False),
-        ((), tuple[Any], True),
+        ((), tuple[Any], False),
         ((), tuple, True),
-        ((), tuple[str], True),
-        (("a", "b", "c"), tuple[Any], True),
+        ((), tuple[str], False),
+        (("a", "b", "c"), list[Any], False),
+        (("a", "b", "c"), tuple[Any], False),
+        (("a", "b", "c"), tuple[Any, ...], True),
+        (("a",), tuple[Any, ...], True),
         (("a", "b", "c"), tuple, True),
-        (("a", "b", "c"), tuple[str], True),
+        (("a", "b", "c"), tuple[str], False),
+        (("a", "b", "c"), tuple[str, ...], True),
+        (("a",), tuple[str, ...], True),
+        (("a", "b", "c"), tuple[str, str, str], True),
         (("a", "b", "c"), tuple[int], False),
+        (("a", "b", "c"), tuple[int, ...], False),
+        (("a", "b"), tuple[str, str, str], False),
         ([], list[Any], True),
         ([], list, True),
         ([], list[str], True),
