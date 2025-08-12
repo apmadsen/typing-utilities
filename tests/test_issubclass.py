@@ -1,6 +1,6 @@
 # pyright: basic
 # ruff: noqa
-from typing import Any, Type, Iterable, TypeVar, Generic, cast
+from typing import Any, Type, Iterable, TypeVar, Generic, Literal, cast
 from collections import abc, deque, defaultdict, OrderedDict, ChainMap
 from types import NoneType
 from pytest import raises as assert_raises, fixture
@@ -270,6 +270,25 @@ def test_tuples(comparisons: dict[str, list[tuple[str, str]]]):
         result = issubclass_typing(cls, base)
         print(f"Testing issubclass_typing({get_type_name(cls)}, {get_type_name(base)}) ==> {result}")
 
+        assert result == expected
+
+        for impl, result_comparison in comparison_generator(cls, base):
+            if result != result_comparison:
+                comparisons[impl].append((f"Comparing {impl}.issubclass({get_type_name(cls)}, {get_type_name(base)})", f"{result_comparison} != {result}"))
+
+
+def test_literals(comparisons: dict[str, list[tuple[str, str]]]):
+    for cls, base, expected in (
+        (int, Literal[1,2,3,4], True),
+        (str, Literal[1,2,3,4], False),
+        (str, Literal["a","b","c"], True),
+        (str, Literal["a",2,"c"], True),
+        (int, Literal["a",2,"c"], True),
+    ):
+
+        result = issubclass_typing(cls, base)
+        print(f"Testing issubclass_typing({get_type_name(cls)}, {get_type_name(base)}) ==> {result}")
+
         if result != expected:
             issubclass_typing(cls, base)
 
@@ -278,3 +297,4 @@ def test_tuples(comparisons: dict[str, list[tuple[str, str]]]):
         for impl, result_comparison in comparison_generator(cls, base):
             if result != result_comparison:
                 comparisons[impl].append((f"Comparing {impl}.issubclass({get_type_name(cls)}, {get_type_name(base)})", f"{result_comparison} != {result}"))
+

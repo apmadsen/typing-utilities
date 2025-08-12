@@ -1,4 +1,4 @@
-from typing import Annotated, Type, TypeVar, Sequence, Any, Generic, Union, Callable, cast, overload
+from typing import Annotated, Type, TypeVar, Sequence, Any, Generic, Union, Callable, Literal, cast, overload
 from typing import _GenericAlias, GenericAlias, _SpecialGenericAlias, _UnionGenericAlias, _SpecialForm # pyright: ignore[reportUnknownVariableType, reportAttributeAccessIssue, reportPrivateUsage ]
 from types import UnionType, NoneType, EllipsisType, FunctionType
 
@@ -319,6 +319,21 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
 
     if isinstance(cls, (TypeVar, TypeVarTuple)):
         raise ValueError("Argument cls cannot be an instance of TypeVar or TypeVarTuple")
+
+    cls_origin = get_generic_origin(cls)
+
+    if cls_origin is Literal:
+        raise ValueError("Argument cls cannot be a Literal") # pragma: no cover
+
+    if isinstance(base, (TypeVar, TypeVarTuple)):
+        base_origin = None
+    else:
+        base_origin = get_generic_origin(cast(AnyType, base))
+
+    if base_origin is Literal: # resolve literal into a union
+        types: tuple[type[Any], ...] = tuple(set([ type(arg) for arg in getattr(base, ARGS) ])) # pyright: ignore[reportUnknownArgumentType]
+        base = types[0] if len(types) == 1 else Union[types]
+
     if not cls:
         return False # pragma: no cover
     elif cls is base:
@@ -346,7 +361,7 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
         base_args = get_generic_arguments(base)
 
     if base_args and set(base_args) == SetOfAny:
-        if (origin := get_generic_origin(cast(AnyType, base))) and origin != tuple:
+        if (origin := base_origin) and origin != tuple:
             base = origin
         elif len(cls_args) == len(base_args):
             return True # any single item tuple is a subclass of tuple[Any]
@@ -357,14 +372,14 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
 
     if cls_is_type:
         if base_is_type:
-            if get_generic_origin(cls) is base:
+            if cls_origin is base:
                 return True
 
             cls_args = get_generic_arguments(cls) if cls_is_subscripted_generic_type else get_union_types(cast(UnionParameter, cls)) if is_union(cls) else ()
             if base_is_generic_type:
                 base_args = get_generic_parameters(cast(type[Any], base), extract_types_from_typevars = True)
 
-            if get_generic_origin(cls) == get_generic_origin(base):
+            if cls_origin == get_generic_origin(base):
                 if cls_args == base_args:
                     return True
                 elif cls_args and base_args and len(cls_args) == len(base_args) and not [
