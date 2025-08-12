@@ -1,12 +1,12 @@
 # pyright: basic
 # ruff: noqa
-from typing import Any, Generic, TypeVar, Union, Optional, List, Dict, cast
+from typing import Any, Generic, TypeVar, Union, Optional, List, Dict, Literal, cast
 from types import NoneType, EllipsisType, UnionType
 from pytest import raises as assert_raises
 
 from typingutils import (
-    is_type, is_union, get_type_name, is_optional, get_optional_type, TypeParameter, UnionParameter, TypeVarParameter,
-    is_subscripted_generic_type, is_generic_type, get_generic_arguments, get_generic_parameters, is_variadic_tuple_type
+    is_type, is_union, get_type_name, is_optional, get_optional_type, TypeParameter, UnionParameter, TypeVarParameter, AnyType, resolve_literal_to_type,
+    is_subscripted_generic_type, is_generic_type, get_generic_arguments, get_generic_parameters, is_variadic_tuple_type, get_types_from_literal
 )
 from typingutils.core.compat.typevar_tuple import TypeVarTuple
 from typingutils.internal import get_generic_origin, get_original_class, get_union_types, get_types_from_typevar, construct_generic_type
@@ -54,6 +54,27 @@ def test_get_generic_parameters():
             else:
                 assert not any(result)
 
+def test_resolve_literal_to_type():
+    tests = (
+        (Literal[1,2,3], int),
+        (Literal[1,"a",3], int|str),
+        (Literal["a"], str),
+    )
+    for test, expected in tests:
+        result = resolve_literal_to_type(cast(AnyType, test))
+
+        assert result == expected
+
+def test_get_types_from_literal():
+    tests = (
+        (Literal[1,2,3], (int,)),
+        (Literal[1,"a",3], (int, str)),
+        (Literal["a"], (str,)),
+    )
+    for test, expected in tests:
+        result = get_types_from_literal(cast(AnyType, test))
+
+        assert result == expected
 
 
 

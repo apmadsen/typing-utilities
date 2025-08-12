@@ -255,6 +255,22 @@ def is_union(cls: AnyType) -> bool:
     else:
        return get_generic_origin(cast(TypeParameter, cls)) is Union
 
+def is_literal(cls: AnyType) -> bool:
+    """
+    Indicates whenter or not type is a literal.
+
+    Args:
+        cls (AnyType): A type.
+
+    Returns:
+        bool: Returns true if type is a literal.
+    """
+
+    if type(cls) is TypeVar:
+        return False
+    else:
+       return get_generic_origin(cast(TypeParameter, cls)) is Literal
+
 def is_optional(cls: AnyType) -> bool:
     """
     Indicates if type is an optional type, i.e. a union containing None or a typing.Optional[T].
@@ -292,12 +308,12 @@ def get_optional_type(cls: AnyType) -> tuple[AnyType, bool]:
     if is_union(cls):
         classes_org = getattr(cls, ARGS)
         optional: bool = NoneType in classes_org
-        classes = [ c for c in classes_org if c != NoneType ]
+        classes = tuple(( c for c in classes_org if c != NoneType ))
 
         if len(classes) == 1:
             return classes[0], optional
         else:
-            return cast(type, Union[tuple(classes)]), optional
+            return construct_union(classes), optional
 
     return cast(type, cls), False
 
@@ -320,19 +336,19 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
     if isinstance(cls, (TypeVar, TypeVarTuple)):
         raise ValueError("Argument cls cannot be an instance of TypeVar or TypeVarTuple")
 
-    cls_origin = get_generic_origin(cls)
-
-    if cls_origin is Literal:
+    if is_literal(cls): # resolve literal into a type
         raise ValueError("Argument cls cannot be a Literal") # pragma: no cover
+        # literal_types = get_types_from_literal(cls)
+        # if len(literal_types) == 1:
+        #     cls = literal_types[0]
+        # else:
+        #     raise ValueError("Argument cls cannot be a Literal of different types") # pragma: no cover
 
     if isinstance(base, (TypeVar, TypeVarTuple)):
         base_origin = None
-    else:
-        base_origin = get_generic_origin(cast(AnyType, base))
 
-    if base_origin is Literal: # resolve literal into a union
-        types: tuple[type[Any], ...] = tuple(set([ type(arg) for arg in getattr(base, ARGS) ])) # pyright: ignore[reportUnknownArgumentType]
-        base = types[0] if len(types) == 1 else Union[types]
+    if is_literal(cast(AnyType, base)): # resolve literal into a tuple of types
+        base = get_types_from_literal(cast(AnyType, base))
 
     if not cls:
         return False # pragma: no cover
@@ -361,7 +377,8 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
         base_args = get_generic_arguments(base)
 
     if base_args and set(base_args) == SetOfAny:
-        if (origin := base_origin) and origin != tuple:
+        base_origin = get_generic_origin(cast(AnyType, base))
+        if (origin := base_origin) and origin is not tuple:
             base = origin
         elif len(cls_args) == len(base_args):
             return True # any single item tuple is a subclass of tuple[Any]
@@ -372,6 +389,8 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
 
     if cls_is_type:
         if base_is_type:
+            cls_origin = get_generic_origin(cls)
+
             if cls_origin is base:
                 return True
 
@@ -420,6 +439,58 @@ def get_types_from_typevar(typevar: TypeVarParameter) -> TypeParameter | UnionPa
     elif isinstance(typevar, (TypeVar, TypeVarTuple)): # pyright: ignore[reportUnnecessaryIsInstance]
         return tuple[type[Any], ...]
     return type[Any]
+
+def get_types_from_literal(literal: AnyType) -> tuple[type[Any], ...]:
+    """The `get_types_from_literal` functions returns the distinct types which makes up a literals values.
+
+    Example:
+
+    get_types_from_literal(Literal[1,2,3]) -> int
+
+    Args:
+        literal (AnyType): A literal.
+
+    Returns:
+        tuple[type[Any], ...]: Returns a tuple of types.
+    """
+    return tuple(set([ type(arg) for arg in getattr(literal, ARGS) ])) # pyright: ignore[reportUnknownArgumentType]
+
+def resolve_literal_to_type(literal: AnyType) -> AnyType:
+    """Resolves literal into a type or type union.
+
+    Examples:
+
+    get_types_from_literal(Literal[1,2,3]) -> int
+    get_types_from_literal(Literal[1,"a",3]) -> int | str
+
+    Args:
+        literal (AnyType): A literal.
+
+    Returns:
+        AnyType: Returns a type or type union.
+    """
+    types = get_types_from_literal(literal)
+    if len(types) == 1:
+        return types[0]
+    else:
+        return construct_union(types)
+
+def construct_union(types: tuple[type[Any], ...]) -> AnyType:
+    """Constructs a type union from a sequence of types.
+
+    Args:
+        types (tuple[type[Any], ...]): The types.
+
+    Returns:
+        AnyType: Returns a type or type union.
+    """
+    lastcls: type[Any] | None = None
+    for cls in types:
+        if lastcls is not None:
+            lastcls = type.__or__(lastcls, cls) # pyright: ignore[reportAssignmentType]
+        else:
+            lastcls = cls
+    return cast(AnyType, lastcls)
 
 def construct_generic_type(cls: type, *generic_arguments: AnyType | EllipsisType) -> type:
     generic_arguments = tuple( arg if arg != EllipsisType else Ellipsis for arg in generic_arguments )

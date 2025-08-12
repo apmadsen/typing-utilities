@@ -258,13 +258,13 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
     if cls_is_subscripted_generic_type:
         cls_args = get_generic_arguments(cls)
 
-    if obj_has_orig_cls_attr and getattr(obj, ORIGINAL_CLASS) != type:
+    if obj_has_orig_cls_attr and getattr(obj, ORIGINAL_CLASS) is not type:
         origin = getattr(obj, ORIGINAL_CLASS)
         if origin == cls:
             return True
 
     if not obj_has_orig_cls_attr and cls_has_origin_attr and cls_has_args_attr and set(get_generic_arguments(cls)) == SetOfAny:
-       if cls_origin != tuple:
+       if cls_origin is not tuple:
             cls = cls_origin
 
     if not is_subscripted_generic_type(cast(TypeParameter | UnionParameter, cls)) and not is_generic_type(cast(TypeParameter, type(obj))):
