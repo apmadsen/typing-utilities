@@ -1,4 +1,5 @@
 # pyright: basic
+# ruff: noqa
 from typing import (
     Any, Sequence, MutableSequence, List, Mapping, MutableMapping, Dict, Deque,
     Set, Tuple, DefaultDict, OrderedDict as OrderedDict_, FrozenSet, Type, Iterable, cast

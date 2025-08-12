@@ -1,4 +1,5 @@
 # pyright: basic
+# ruff: noqa
 from typing import Any, Generic, TypeVar, Union, Optional, List, Dict, cast
 from types import NoneType, EllipsisType, UnionType
 from pytest import raises as assert_raises
@@ -205,6 +206,8 @@ def test_get_type_name():
             assert not result.startswith("<class")
 
     for cls, expected in cast(tuple[tuple[TypeParameter|UnionParameter, str]], (
+        (object, "object"),
+        (type, "type"),
         (EllipsisType, "..."),
         (NoneType, "None"),
         (List[str], "typing.List[str]"),

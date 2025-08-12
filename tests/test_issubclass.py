@@ -1,4 +1,5 @@
 # pyright: basic
+# ruff: noqa
 from typing import Any, Type, Iterable, TypeVar, Generic, cast
 from collections import abc, deque, defaultdict, OrderedDict, ChainMap
 from types import NoneType

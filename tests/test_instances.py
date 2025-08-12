@@ -1,4 +1,5 @@
 # pyright: basic
+# ruff: noqa
 from typing import Generic, Tuple, Dict, Optional, Union, Any, cast
 from datetime import date, time, datetime
 from pytest import raises as assert_raises

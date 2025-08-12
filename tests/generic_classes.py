@@ -1,4 +1,5 @@
 # pyright: basic
+# ruff: noqa
 from __future__ import annotations
 from typing import TypeVar, Generic, Mapping, Iterator
 from enum import Enum

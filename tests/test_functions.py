@@ -1,4 +1,5 @@
 # pyright: basic
+# ruff: noqa
 from typing import Any, TypeVar, cast
 from pytest import raises as assert_raises, fixture
 import sys
