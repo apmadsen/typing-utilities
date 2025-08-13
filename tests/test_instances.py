@@ -1,13 +1,24 @@
 # pyright: basic
 # ruff: noqa
-from typing import Generic, Tuple, Dict, Optional, Union, Any, cast
+from typing import (
+    Generic, Tuple, Dict, Optional, Union, Any, Literal, Annotated, cast,
+    ClassVar, Final, TypeAlias
+)
 from datetime import date, time, datetime
 from pytest import raises as assert_raises
+from os import getenv
 
-from typingutils import isinstance_typing, issubclass_typing, get_generic_arguments, get_generic_parameters
+from typingutils import isinstance_typing, issubclass_typing, get_generic_arguments, get_generic_parameters, is_literal, is_annotated_type, resolve_annotation
 from typingutils.internal import get_original_class
+from typingutils.core.compat.readonly import ReadOnly
+from typingutils.core.compat.required import Required
+from typingutils.core.compat.not_required import NotRequired
+from typingutils.core.compat.unpack import Unpack
+from typingutils.core.compat.literal_string import LiteralString
 
 from tests.generic_classes import NormalClass, GenericClass1, T, T1, T2
+
+TESTS_EXTENSIVE_DEBUGGING = getenv("TESTS_EXTENSIVE_DEBUGGING", "").lower() in ("1", "true")
 
 def test_get_original_class():
     class GenericClass(Generic[T]):
@@ -105,3 +116,55 @@ def test_issubclass_typing():
         assert not issubclass_typing(T1, T2) # pyright: ignore[reportCallIssue, reportArgumentType]
     with assert_raises(ValueError):
         assert not issubclass_typing(T, str) # pyright: ignore[reportCallIssue, reportArgumentType]
+
+def test_is_literal():
+    tests = (
+        (Literal[1,2,3], True),
+        (Literal[1,"a",3], True),
+        (str, False),
+    )
+    for test, expected in tests:
+        result = is_literal(test)
+
+        assert result == expected
+
+def test_is_annotation():
+    tests = (
+        (Annotated[int, "test"], True),
+        (Required[int], True),
+        (ReadOnly[int], True),
+        (NotRequired[int], True),
+        (ClassVar[int], True),
+        (Final[int], True),
+        (Unpack[int], True),
+        (Literal[1,"a",3], False),
+        (str, False),
+    )
+    for test, expected in tests:
+        result = is_annotated_type(test)
+
+        assert result == expected
+
+
+def test_resolve_annotation():
+    tests = (
+        (float|bool, float|bool),
+        (Literal[1,2,3], int),
+        (Literal[1,"a",3], int|str),
+        (Literal["a"], str),
+        (Required[int], int),
+        (ReadOnly[int], int),
+        (NotRequired[int], int),
+        (ClassVar[int], int),
+        (Final[int], int),
+        (Annotated[int, "an integer"], int),
+        (Annotated[float|int, "an integer or float"], float|int),
+    )
+    for test, expected in tests:
+        result = resolve_annotation(test)
+
+
+        if result != expected:
+            resolve_annotation(test)
+
+        assert result == expected

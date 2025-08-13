@@ -1,8 +1,16 @@
-from typing import Callable, Type, TypeVar, Any, Union, NamedTuple, overload, cast
+from typing import (
+    Callable, Type, TypeVar, Any, Union, NamedTuple, Literal, Annotated,
+    ClassVar, Final, overload, cast
+)
+from typing import _SpecialForm, _GenericAlias, _AnnotatedAlias # pyright: ignore[reportUnknownVariableType, reportAttributeAccessIssue, reportPrivateUsage]
 from types import UnionType, NoneType
 from collections import abc
 from inspect import stack as get_stack
 
+from typingutils.core.compat.readonly import ReadOnly
+from typingutils.core.compat.required import Required
+from typingutils.core.compat.not_required import NotRequired
+from typingutils.core.compat.unpack import Unpack
 from typingutils.core.attributes import  ORIGIN, ORIGINAL_CLASS, ARGS, TYPE_PARAMS
 from typingutils.core.types import (
     TypeParameter, TypeVarParameter, UnionParameter, AnyType, SetOfAny, TypeArgs, is_variadic_tuple_type,
@@ -327,3 +335,80 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
             return True
 
     return False
+
+
+def is_literal(obj: Any) -> bool:
+    """
+    The `is_literal` function checks whenter or not object is an literal.
+
+    Args:
+        obj (AnyType): The object to check..
+
+    Returns:
+        bool: Returns true if type is a literal.
+    """
+    if hasattr(obj, ORIGIN) and ( origin := getattr(obj, ORIGIN) ):
+        return origin is Literal
+    return False
+
+
+def is_annotated_type(obj: Any) -> bool:
+    """
+    The `is_annotated_type` function checks whenter or not object is an annotated type.
+    Supported annotations are Annotated, Required, NotRequired, ReadOnly, ClassVar and Final.
+
+    Args:
+        obj (Any): The object to check..
+
+    Returns:
+        bool: Returns true if object is an annotated type.
+    """
+    if isinstance(obj, _AnnotatedAlias) and hasattr(obj, ORIGIN) and ( origin := getattr(obj, ORIGIN) ):
+        return is_type(origin)
+    elif isinstance(obj, _GenericAlias) and hasattr(obj, ORIGIN) and ( origin := getattr(obj, ORIGIN) ):
+        return origin in (Required, NotRequired, ReadOnly, ClassVar, Final, Unpack)
+    return False
+
+
+def resolve_annotation(obj: AnyType | Annotated[Any, "any"]) -> AnyType:
+    """The `resolve_annotation` function resolves annotation into a type or type union, whether being an ordinary type, a Literal or an Annotated instance.
+    Supported annotations are Literal, Annotated, Required, NotRequired, ReadOnly, ClassVar and Final.
+
+    Examples:
+
+    resolve_annotation(Literal[1,2,3]) -> int
+    resolve_annotation(Literal[1,"a",3]) -> int | str
+    resolve_annotation(Annotated[int, "an integer"]) -> int
+
+    Args:
+        obj (AnyType | Annotated[Any, "any"]): The annotation to check.
+
+    Returns:
+        AnyType: Returns a type or type union.
+    """
+    from typingutils.core.types import construct_union
+    if (
+        isinstance(obj, _AnnotatedAlias) and hasattr(obj, ORIGIN)
+        and ( origin := getattr(obj, ORIGIN) ) and is_type(origin)
+    ):
+        return origin
+    elif (
+        type(obj) in (_SpecialForm, _GenericAlias)
+        and hasattr(obj, ORIGIN)
+        and ( origin := getattr(obj, ORIGIN) )
+        and origin in (Required, NotRequired, ReadOnly, ClassVar, Final)
+        and hasattr(obj, ARGS)
+        and ( args := getattr(obj, ARGS))
+    ):
+        types: tuple[type[Any], ...] = tuple(set(args))
+        return types[0] if len(types) == 1 else construct_union(types)
+    elif (
+        hasattr(obj, ORIGIN)
+        and ( origin := getattr(obj, ORIGIN) )
+        and origin is Literal
+        and hasattr(obj, ARGS) and ( args := getattr(obj, ARGS))
+    ):
+        types: tuple[type[Any], ...] = tuple(set([ type(arg) for arg in args ])) # pyright: ignore[reportUnknownArgumentType]
+        return types[0] if len(types) == 1 else construct_union(types)
+
+    return obj

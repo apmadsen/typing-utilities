@@ -1,10 +1,10 @@
 from typingutils.core.instances import (
-    isinstance_typing, is_type, is_subscripted_generic_type,
+    isinstance_typing, is_type, is_subscripted_generic_type, is_literal, is_annotated_type, resolve_annotation,
     get_generic_arguments, check_type, TypeCheck
 )
 from typingutils.core.types import (
-    get_type_name, issubclass_typing, is_optional, get_optional_type, is_literal, resolve_literal_to_type,
-    is_generic_type, is_union, get_generic_parameters, is_variadic_tuple_type, get_types_from_literal,
+    get_type_name, issubclass_typing, is_optional, get_optional_type,
+    is_generic_type, is_union, get_generic_parameters, is_variadic_tuple_type,
     TypeParameter, UnionParameter, AnyType, AnyFunction,
     TypeArgs, TypeVarParameter
 )
@@ -30,11 +30,11 @@ __all__ = [
     'is_optional',
     'is_union',
     'is_literal',
+    'is_annotated_type',
     'is_variadic_tuple_type',
     'get_type_name',
     'get_optional_type',
     'get_generic_arguments',
     'get_generic_parameters',
-    'get_types_from_literal',
-    'resolve_literal_to_type',
+    'resolve_annotation',
 ]

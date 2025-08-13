@@ -4,6 +4,7 @@ from typing import (
     Any, Sequence, MutableSequence, List, Mapping, MutableMapping, Dict, Deque,
     Set, Tuple, DefaultDict, OrderedDict as OrderedDict_, FrozenSet, Type, Iterable, cast
 )
+from os import getenv
 from collections import abc, deque, defaultdict, OrderedDict, Counter, ChainMap
 from datetime import date, time, datetime
 from decimal import Decimal
@@ -12,6 +13,8 @@ from pytest import raises as assert_raises, fixture
 
 from typingutils import TypeParameter, UnionParameter, AnyType, get_type_name, isinstance_typing, is_type
 from tests.other_impl.isinstance import comparison_generator
+
+TESTS_EXTENSIVE_DEBUGGING = getenv("TESTS_EXTENSIVE_DEBUGGING", "").lower() in ("1", "true")
 
 instance_assertions: list[tuple[object | tuple[object], tuple[TypeParameter | UnionParameter, ...], bool]] = [
     (type, (
@@ -228,20 +231,21 @@ def comparisons():
     impl: dict[str, list[tuple[str, str]]] = defaultdict(lambda: [])
     yield impl
 
-    print("\n")
+    if getenv("TESTS_EXTENSIVE_DEBUGGING", "").lower() in ("1", "true"):
+        print("\n")
 
-    for key in impl:
-        count = 0
-        failed = 0
-        for comparison, result in impl[key]:
-            if "Error" in result:
-                failed += 1
-                print(f"{comparison} ==> FAILED")
-            else:
-                print(f"{comparison} ==> {result}")
-                count +=1
+        for key in impl:
+            count = 0
+            failed = 0
+            for comparison, result in impl[key]:
+                if "Error" in result:
+                    failed += 1
+                    print(f"{comparison} ==> FAILED")
+                else:
+                    print(f"{comparison} ==> {result}")
+                    count +=1
 
-        print(f"Comparison with {key}: {count} differences and {failed} failed\n")
+            print(f"Comparison with {key}: {count} differences and {failed} failed\n")
 
 
 def test_all_types(comparisons: dict[str, list[tuple[str, str]]]):
@@ -276,10 +280,12 @@ def test_all_instances(comparisons: dict[str, list[tuple[str, str]]]):
         result = isinstance_typing(instance)
 
         if is_inst:
-            print(f"Testing isinstance_typing({instance}) ==> {result}")
+            if TESTS_EXTENSIVE_DEBUGGING:
+                print(f"Testing isinstance_typing({instance}) ==> {result}")
             assert result
         else:
-            print(f"Testing !isinstance_typing({instance}) ==> {result}")
+            if TESTS_EXTENSIVE_DEBUGGING:
+                print(f"Testing !isinstance_typing({instance}) ==> {result}")
             assert not result
 
 
@@ -292,7 +298,8 @@ def test_explicit_assertions(comparisons: dict[str, list[tuple[str, str]]]):
             for type_ in types:
                 result = isinstance_typing(instance, type_)
 
-                print(f"Testing isinstance_typing({instance}, {get_type_name(type_)}) ==> {result}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing isinstance_typing({instance}, {get_type_name(type_)}) ==> {result}")
                 assert result is not None
                 assert result == True
 
@@ -303,7 +310,8 @@ def test_explicit_assertions(comparisons: dict[str, list[tuple[str, str]]]):
 
             for type_ in negations:
                 result = isinstance_typing(instance, type_)
-                print(f"Testing !isinstance_typing({instance}, {get_type_name(type_)}) ==> {result}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing !isinstance_typing({instance}, {get_type_name(type_)}) ==> {result}")
 
                 assert result is not None
                 assert result == False
@@ -322,7 +330,8 @@ def test_multiple(comparisons: dict[str, list[tuple[str, str]]]):
     )):
 
         result = isinstance_typing(obj, cls)
-        print(f"Testing isinstance_typing({obj}, {cls}) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing isinstance_typing({obj}, {cls}) ==> {result}")
         assert result == expected
 
         for impl, result_comparison in comparison_generator(obj, cls):
@@ -346,7 +355,8 @@ def test_builtin_generic_types(comparisons: dict[str, list[tuple[str, str]]]):
     )):
 
         result = isinstance_typing(obj, cls)
-        print(f"Testing isinstance_typing({obj}, {cls}) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing isinstance_typing({obj}, {cls}) ==> {result}")
         assert result == expected
 
         for impl, result_comparison in comparison_generator(obj, cls):
@@ -409,7 +419,8 @@ def test_recursive(comparisons: dict[str, list[tuple[str, str]]]):
     )):
 
         result = isinstance_typing(obj, cls, recursive=True)
-        print(f"Testing isinstance_typing({obj}, {cls}, recursive=True) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing isinstance_typing({obj}, {cls}, recursive=True) ==> {result}")
         if result != expected:
             isinstance_typing(obj, cls, recursive=True)
         assert result == expected
