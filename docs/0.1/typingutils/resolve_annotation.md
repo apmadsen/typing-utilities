@@ -1,6 +1,6 @@
 [Documentation](/docs/documentation.md) >
- [v0.0](/docs/0.0/version.md) >
-  [typingutils](/docs/0.0/typingutils/module.md) >
+ [v0.1](/docs/0.1/version.md) >
+  [typingutils](/docs/0.1/typingutils/module.md) >
    resolve_annotation
 
 # resolve_annotation(obj: _[AnyType](any_type.md) | Annotated[Any, "any"]_) -> _[AnyType](any_type.md)_

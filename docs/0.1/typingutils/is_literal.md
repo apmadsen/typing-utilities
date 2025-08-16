@@ -1,6 +1,6 @@
 [Documentation](/docs/documentation.md) >
- [v0.0](/docs/0.0/version.md) >
-  [typingutils](/docs/0.0/typingutils/module.md) >
+ [v0.1](/docs/0.1/version.md) >
+  [typingutils](/docs/0.1/typingutils/module.md) >
    is_literal
 
 # is_literal(obj: _Any_) -> _bool_
