@@ -350,8 +350,15 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
         return True
     elif base in (object, TypeParameter,  type[Any], Type[Any]):
         return True
-    elif is_union(cls) and is_union(base): # pyright: ignore[reportArgumentType]
+
+    cls_is_union = is_union(cls)
+    base_is_union = is_union(base) # pyright: ignore[reportArgumentType]
+
+
+    if cls_is_union and base_is_union:
         return set(get_generic_arguments(cls)) == set(get_generic_arguments(base))
+    elif cls_is_union:
+        return False # a union type is never a subclass of a non-union type
 
 
     if isinstance(base, tuple):
@@ -378,7 +385,7 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
         elif len(cls_args) == len(base_args):
             return True # any single item tuple is a subclass of tuple[Any]
 
-    if is_union(base):
+    if base_is_union:
         classes = get_generic_arguments(base)
         return any([ issubclass_typing(cls, b) for b in classes ]) or cls_is_type and get_generic_origin(cast(type, cls)) is Union
 
@@ -389,7 +396,7 @@ def issubclass_typing(cls: AnyType, base: AnyType | TypeArgs ) -> bool:
             if cls_origin is base:
                 return True
 
-            cls_args = get_generic_arguments(cls) if cls_is_subscripted_generic_type else get_union_types(cast(UnionParameter, cls)) if is_union(cls) else ()
+            cls_args = get_generic_arguments(cls) if cls_is_subscripted_generic_type else get_union_types(cast(UnionParameter, cls)) if cls_is_union else ()
             if base_is_generic_type:
                 base_args = get_generic_parameters(cast(type[Any], base), extract_types_from_typevars = True)
 

@@ -144,6 +144,8 @@ def test_issubclass_typing(comparisons: dict[str, list[tuple[str, str]]]):
     tested_base: set[type[Any]] = set()
     tested_comparison: set[type[Any]] = set()
 
+    assert not issubclass_typing(str|int, tuple)
+
     for testcase in issubclass_testcases:
         if testcase.base not in tested_base:
             tested_base.add(testcase.base)
