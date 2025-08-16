@@ -1,8 +1,12 @@
-from typing import Annotated, Type, TypeVar, Sequence, Any, Generic, Union, Callable, Iterable, cast, overload
+from typing import (
+    Annotated, Type, TypeVar, Sequence, Any, Generic, Union, Callable, Iterable,
+    ClassVar, Final, Literal, cast, overload
+)
 from typing import _GenericAlias, _SpecialGenericAlias, _UnionGenericAlias, _SpecialForm # pyright: ignore[reportUnknownVariableType, reportAttributeAccessIssue, reportPrivateUsage ]
 from types import UnionType, NoneType, EllipsisType, FunctionType, GenericAlias
 
 from typingutils.core.compat.typevar_tuple import TypeVarTuple
+from typingutils.core.compat.annotations import ReadOnly, Required, NotRequired, LiteralString, Unpack
 from typingutils.core.attributes import (
     BASES, NAME, QUALIFIED_NAME, MODULE, ORIGIN, ARGS, PARAMETERS, TYPE_PARAMS,
     GENERIC_CONSTRUCTOR, SPECIAL_CONSTRUCTOR, BOUND, CONSTRAINTS
@@ -19,7 +23,7 @@ SetOfAny = set((Any,))
 
 GENERIC_BASE_TYPES: set[type] = set(cast(list[type], [ _GenericAlias, GenericAlias, _SpecialGenericAlias ]))
 GENERIC_SPECIAL_TYPES: set[type] = set(cast(list[type], [ _SpecialGenericAlias, _SpecialForm, _UnionGenericAlias ]))
-
+ANNOTATIONS: list[Any] = [ Annotated, Required, NotRequired, ReadOnly, ClassVar, Final, Unpack, Literal, LiteralString ]
 
 def is_generic_type(cls: AnyType) -> bool:
     """
@@ -31,7 +35,6 @@ def is_generic_type(cls: AnyType) -> bool:
     Returns:
         bool: A boolean indicating if type is a generic type or not.
     """
-
     if type(cls) is TypeVar:
         return False
     elif hasattr(cls, ORIGIN):
@@ -67,9 +70,10 @@ def is_subscripted_generic_type(cls: AnyType) -> bool:
     Returns:
         bool: Returns True if cls is a subscripted generic type.
     """
-    from typingutils.core.instances import get_generic_arguments
-
-    return hasattr(cls, ARGS) and any(get_generic_arguments(cls))
+    if isinstance(cls, (GenericAlias, _GenericAlias)):
+        from typingutils.core.instances import get_generic_arguments
+        return hasattr(cls, ARGS) and any(get_generic_arguments(cls))
+    return False
 
 def is_variadic_tuple_type(cls: type[tuple[Any, ...]] | type[tuple[Any]]) -> bool:
     """Indicates whether or not `cls` is a variadic tuple type, eg. `tuple[str, ...]`.
@@ -80,10 +84,11 @@ def is_variadic_tuple_type(cls: type[tuple[Any, ...]] | type[tuple[Any]]) -> boo
     Returns:
         bool: Returns True if cls is a variadic tuple type.
     """
-    from typingutils.core.instances import get_generic_arguments
-    args = get_generic_arguments(cls)
-
-    return len(args) == 2 and args[1] == Ellipsis and args[0] != Ellipsis # pyright: ignore[reportUnnecessaryComparison]
+    if isinstance(cls, (GenericAlias, _GenericAlias)):
+        from typingutils.core.instances import get_generic_arguments
+        args = get_generic_arguments(cls)
+        return len(args) == 2 and args[1] == Ellipsis and args[0] != Ellipsis # pyright: ignore[reportUnnecessaryComparison]
+    return False
 
 @overload
 def get_generic_parameters(obj: TypeParameter | AnyFunction) -> tuple[TypeVar, ...]:
@@ -249,12 +254,12 @@ def is_union(cls: AnyType) -> bool:
         bool: Returns true if type is a union of types.
     """
 
-    if type(cls) is TypeVar:
-        return False
-    elif isinstance(cls, UnionType):
+    if isinstance(cls, UnionType):
         return True
-    else:
+    elif hasattr(cls, ORIGIN):
        return get_generic_origin(cast(TypeParameter, cls)) is Union
+    else:
+        return False
 
 
 

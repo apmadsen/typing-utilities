@@ -8,15 +8,14 @@ from datetime import date, time, datetime
 from pytest import raises as assert_raises
 from os import getenv
 
-from typingutils import isinstance_typing, issubclass_typing, get_generic_arguments, get_generic_parameters, is_literal, is_annotated_type, resolve_annotation
+from typingutils import isinstance_typing, issubclass_typing, get_generic_arguments, get_generic_parameters, is_literal, is_annotated_type, resolve_annotation, get_type_name
 from typingutils.internal import get_original_class
-from typingutils.core.compat.readonly import ReadOnly
-from typingutils.core.compat.required import Required
-from typingutils.core.compat.not_required import NotRequired
-from typingutils.core.compat.unpack import Unpack
-from typingutils.core.compat.literal_string import LiteralString
+from typingutils.core.types import ANNOTATIONS
+from typingutils.core.compat.annotations import ReadOnly, Required, NotRequired, LiteralString, Unpack
+from typingutils.core.compat.annotations import LiteralString
 
 from tests.generic_classes import NormalClass, GenericClass1, T, T1, T2
+from tests.generic_types import non_generic_types, generic_types
 
 TESTS_EXTENSIVE_DEBUGGING = getenv("TESTS_EXTENSIVE_DEBUGGING", "").lower() in ("1", "true")
 
@@ -104,6 +103,9 @@ def test_isinstance_typing():
     assert isinstance_typing("abc", str|None)
     assert isinstance_typing(None, str|None)
 
+    for cls in ANNOTATIONS:
+        assert not isinstance_typing(str, cls)
+
 
 def test_issubclass_typing():
 
@@ -128,6 +130,12 @@ def test_is_literal():
 
         assert result == expected
 
+    for cls in (*generic_types, *non_generic_types):
+        result = is_literal(cls)
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing is_literal({get_type_name(cls)}) ==> {result}")
+        assert not result
+
 def test_is_annotation():
     tests = (
         (Annotated[int, "test"], True),
@@ -137,7 +145,8 @@ def test_is_annotation():
         (ClassVar[int], True),
         (Final[int], True),
         (Unpack[int], True),
-        (Literal[1,"a",3], False),
+        (Literal[1,"a",3], True),
+        (LiteralString, True),
         (str, False),
     )
     for test, expected in tests:
@@ -145,13 +154,22 @@ def test_is_annotation():
 
         assert result == expected
 
+    for cls in (*generic_types, *non_generic_types):
+        result = is_literal(cls)
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing is_annotated_type({get_type_name(cls)}) ==> {result}")
+        assert not result
+
 
 def test_resolve_annotation():
     tests = (
+        (str, str),
+        (str|int, str|int),
         (float|bool, float|bool),
         (Literal[1,2,3], int),
         (Literal[1,"a",3], int|str),
         (Literal["a"], str),
+        (LiteralString, str),
         (Required[int], int),
         (ReadOnly[int], int),
         (NotRequired[int], int),
@@ -163,8 +181,6 @@ def test_resolve_annotation():
     for test, expected in tests:
         result = resolve_annotation(test)
 
-
         if result != expected:
             resolve_annotation(test)
-
         assert result == expected

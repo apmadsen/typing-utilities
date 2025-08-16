@@ -1,6 +1,6 @@
 # pyright: basic
 # ruff: noqa
-from typing import Any, Generic, TypeVar, Union, Optional, List, Dict, Literal, cast
+from typing import Any, Generic, TypeVar, Union, Optional, List, Dict, Tuple, Literal, cast
 from types import NoneType, EllipsisType, UnionType
 from pytest import raises as assert_raises
 from os import getenv
@@ -10,6 +10,7 @@ from typingutils import (
     is_subscripted_generic_type, is_generic_type, get_generic_arguments, get_generic_parameters, is_variadic_tuple_type, issubclass_typing
 )
 from typingutils.core.compat.typevar_tuple import TypeVarTuple
+from typingutils.core.types import ANNOTATIONS
 from typingutils.internal import get_generic_origin, get_original_class, get_union_types, get_types_from_typevar, construct_generic_type, construct_union
 from typingutils.core.attributes import ORIGIN
 
@@ -29,6 +30,9 @@ def test_is_type():
 
     assert not is_type(object)
     assert not is_type(Any)
+
+    for cls in ANNOTATIONS:
+        assert not is_type(cls)
 
     for testcase in types_testcases:
 
@@ -270,6 +274,12 @@ def test_is_union():
             print(f"Testing is_union({get_type_name(cls)}) ==> {result}")
         assert result == expected
 
+    for cls in (*generic_types, *non_generic_types):
+        result = is_union(cls)
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing is_union({get_type_name(cls)}) ==> {result}")
+        assert not result
+
 
 def test_get_union_types():
     for cls, expected in cast(tuple[tuple[TypeParameter|UnionParameter, tuple[TypeParameter, ...]]], (
@@ -363,10 +373,16 @@ def test_is_variadic_tuple_type():
     assert not is_variadic_tuple_type(str) # pyright: ignore[reportArgumentType]
     assert not is_variadic_tuple_type(tuple[Any]) # pyright: ignore[reportArgumentType]
     assert not is_variadic_tuple_type(tuple[str, int])
-    assert not is_variadic_tuple_type(tuple[str, int, bool])
+    assert not is_variadic_tuple_type(Tuple[str, int, bool])
+    assert not is_variadic_tuple_type(Tuple[Any]) # pyright: ignore[reportArgumentType]
+    assert not is_variadic_tuple_type(Tuple[str, int])
+    assert not is_variadic_tuple_type(Tuple[str, int, bool])
     assert is_variadic_tuple_type(tuple[str, ...])
     assert is_variadic_tuple_type(tuple[int, ...])
     assert is_variadic_tuple_type(tuple[Any, ...])
+    assert is_variadic_tuple_type(Tuple[str, ...])
+    assert is_variadic_tuple_type(Tuple[int, ...])
+    assert is_variadic_tuple_type(Tuple[Any, ...])
 
 def test_construct_union():
     assert issubclass_typing(construct_union((str, int, float)), str | int | float)

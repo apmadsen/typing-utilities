@@ -12,6 +12,7 @@ from types import NoneType
 from pytest import raises as assert_raises, fixture
 
 from typingutils import TypeParameter, UnionParameter, AnyType, get_type_name, isinstance_typing, is_type
+from typingutils.core.compat.annotations import LiteralString
 from tests.other_impl.isinstance import comparison_generator
 
 TESTS_EXTENSIVE_DEBUGGING = getenv("TESTS_EXTENSIVE_DEBUGGING", "").lower() in ("1", "true")

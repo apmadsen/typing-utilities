@@ -1,20 +1,14 @@
-from typing import (
-    Callable, Type, TypeVar, Any, Union, NamedTuple, Literal, Annotated,
-    ClassVar, Final, overload, cast
-)
+from typing import Callable, Type, TypeVar, Any, Union, NamedTuple, Literal, Annotated, overload, cast
 from typing import _SpecialForm, _GenericAlias, _AnnotatedAlias # pyright: ignore[reportUnknownVariableType, reportAttributeAccessIssue, reportPrivateUsage]
 from types import UnionType, NoneType
 from collections import abc
 from inspect import stack as get_stack
 
-from typingutils.core.compat.readonly import ReadOnly
-from typingutils.core.compat.required import Required
-from typingutils.core.compat.not_required import NotRequired
-from typingutils.core.compat.unpack import Unpack
+from typingutils.core.compat.annotations import LiteralString
 from typingutils.core.attributes import  ORIGIN, ORIGINAL_CLASS, ARGS, TYPE_PARAMS
 from typingutils.core.types import (
     TypeParameter, TypeVarParameter, UnionParameter, AnyType, SetOfAny, TypeArgs, is_variadic_tuple_type,
-    is_subscripted_generic_type, is_generic_type, get_generic_origin, issubclass_typing
+    is_subscripted_generic_type, is_generic_type, get_generic_origin, issubclass_typing, ANNOTATIONS
 )
 
 class TypeCheck(NamedTuple):
@@ -168,6 +162,8 @@ def is_type(obj: Any) -> bool:
         return False
     elif obj is Any:
         return False
+    elif obj in ANNOTATIONS:
+        return False
     elif isinstance(obj, UnionType) or get_generic_origin(obj) == Union:
         return True
 
@@ -227,6 +223,8 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
         return True # object is always an instance of itself
     elif cls is Any:
         return True # all objects are an instance of Any
+    elif cls in ANNOTATIONS:
+        return False
     elif obj is cls:
         return False # an object is never an instance of itself (unless it is object - see previous line)
     elif obj is type and cls in (object, type[Any], Type, Type[Any]):
@@ -363,10 +361,12 @@ def is_annotated_type(obj: Any) -> bool:
     Returns:
         bool: Returns true if object is an annotated type.
     """
-    if isinstance(obj, _AnnotatedAlias) and hasattr(obj, ORIGIN) and ( origin := getattr(obj, ORIGIN) ):
+    if obj in ANNOTATIONS:
+        return True
+    elif isinstance(obj, _AnnotatedAlias) and hasattr(obj, ORIGIN) and ( origin := getattr(obj, ORIGIN) ):
         return is_type(origin)
-    elif isinstance(obj, _GenericAlias) and hasattr(obj, ORIGIN) and ( origin := getattr(obj, ORIGIN) ):
-        return origin in (Required, NotRequired, ReadOnly, ClassVar, Final, Unpack)
+    elif isinstance(obj, (_SpecialForm, _GenericAlias)) and hasattr(obj, ORIGIN) and ( origin := getattr(obj, ORIGIN) ):
+        return origin in ANNOTATIONS
     return False
 
 
@@ -386,29 +386,24 @@ def resolve_annotation(obj: AnyType | Annotated[Any, "any"]) -> AnyType:
     Returns:
         AnyType: Returns a type or type union.
     """
-    from typingutils.core.types import construct_union
-    if (
-        isinstance(obj, _AnnotatedAlias) and hasattr(obj, ORIGIN)
-        and ( origin := getattr(obj, ORIGIN) ) and is_type(origin)
-    ):
-        return origin
-    elif (
-        type(obj) in (_SpecialForm, _GenericAlias)
-        and hasattr(obj, ORIGIN)
-        and ( origin := getattr(obj, ORIGIN) )
-        and origin in (Required, NotRequired, ReadOnly, ClassVar, Final)
-        and hasattr(obj, ARGS)
-        and ( args := getattr(obj, ARGS))
-    ):
-        types: tuple[type[Any], ...] = tuple(set(args))
-        return types[0] if len(types) == 1 else construct_union(types)
-    elif (
-        hasattr(obj, ORIGIN)
-        and ( origin := getattr(obj, ORIGIN) )
-        and origin is Literal
-        and hasattr(obj, ARGS) and ( args := getattr(obj, ARGS))
-    ):
-        types: tuple[type[Any], ...] = tuple(set([ type(arg) for arg in args ])) # pyright: ignore[reportUnknownArgumentType]
-        return types[0] if len(types) == 1 else construct_union(types)
+    if is_annotated_type(obj):
+        from typingutils.core.types import construct_union
+
+        if obj is LiteralString:
+            return str
+        else:
+            origin = getattr(obj, ORIGIN)
+
+            if is_type(origin):
+                return origin
+            else:
+                args = getattr(obj, ARGS)
+
+                if origin is Literal:
+                    types: tuple[type[Any], ...] = tuple(set([ type(arg) for arg in args ])) # pyright: ignore[reportUnknownArgumentType]
+                    return types[0] if len(types) == 1 else construct_union(types)
+                else:
+                    types: tuple[type[Any], ...] = tuple(set(args))
+                    return types[0] if len(types) == 1 else construct_union(types)
 
     return obj
