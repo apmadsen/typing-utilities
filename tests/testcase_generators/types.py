@@ -3,7 +3,7 @@ from typing import Any, Iterable, TypeVar, cast
 from dataclasses import dataclass
 from types import UnionType
 
-from typingutils.core.types import _is_special_generic_type, get_generic_parameters
+from typingutils.core.types import ANNOTATIONS, _is_special_generic_type, get_generic_parameters
 from typingutils.core.attributes import NAME, GENERIC_CONSTRUCTOR
 
 
@@ -67,4 +67,3 @@ def create_testcases_for_types() -> Iterable[TypesTestcase]:
             generic_type = getattr(cls, GENERIC_CONSTRUCTOR)(generic_parameters)
 
             yield TypesTestcase(generic_type, False, True)
-

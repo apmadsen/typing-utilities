@@ -50,6 +50,7 @@ This project differs from Python and other projects in some aspects:
 - Any type is a subclass of `type[Any]`.
 - `type[Any]` is not an instance of `type[Any]`.
 - Builtin types and `typing` types are interchangeable, i.e. `list[T]` is interchangeable with `typing.List[T]` etc.
+- Annotations like `typing.Literal` and `typing.Required` are not considered types, but "annotated types", and are therefore not supported in type checks. New function `resolve_annotation()` can be used to resolve these to types before calling `isinstance_typing()`.
 
 ## What's not included
 

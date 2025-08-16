@@ -1,4 +1,5 @@
 # pyright: basic
+# ruff: noqa
 from typing import (
     AbstractSet, Any, AsyncContextManager, AsyncGenerator, AsyncIterable, AsyncIterator,
     Awaitable, Callable, ChainMap, ContextManager, Counter, DefaultDict, Deque, Dict, FrozenSet,

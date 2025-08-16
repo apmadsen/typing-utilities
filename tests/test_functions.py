@@ -1,11 +1,15 @@
 # pyright: basic
+# ruff: noqa
 from typing import Any, TypeVar, cast
 from pytest import raises as assert_raises, fixture
 import sys
+from os import getenv
 
 from typingutils import get_generic_parameters, is_generic_function, AnyFunction, TypeArgs
 from typingutils.internal import get_executing_function
 from typingutils.core.attributes import TYPE_PARAMS
+
+TESTS_EXTENSIVE_DEBUGGING = getenv("TESTS_EXTENSIVE_DEBUGGING", "").lower() in ("1", "true")
 
 def test_is_generic_function():
 

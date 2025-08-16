@@ -1,4 +1,6 @@
 # pyright: basic
+# ruff: noqa
+from os import getenv
 from typing import TypeVar, Iterable, Any, cast
 from typingutils import get_type_name, TypeParameter, UnionParameter, AnyType
 
@@ -35,5 +37,6 @@ except ImportError:
     pass
 
 def comparison_generator(obj: Any, cls: TypeParameter | UnionParameter | tuple[TypeParameter | UnionParameter, ...] | TypeVar) -> Iterable[tuple[str, bool | ImplError]]:
-    for impl in implementations:
-        yield getattr(impl, "__name__"), impl(obj, cls)
+    if getenv("TESTS_EXTENSIVE_DEBUGGING", "").lower() in ("1", "true"):
+        for impl in implementations:
+            yield getattr(impl, "__name__"), impl(obj, cls)

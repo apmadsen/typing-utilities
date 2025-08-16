@@ -1,14 +1,17 @@
 # pyright: basic
-from typing import Any, Generic, TypeVar, Union, Optional, List, Dict, cast
+# ruff: noqa
+from typing import Any, Generic, TypeVar, Union, Optional, List, Dict, Tuple, Literal, cast
 from types import NoneType, EllipsisType, UnionType
 from pytest import raises as assert_raises
+from os import getenv
 
 from typingutils import (
-    is_type, is_union, get_type_name, is_optional, get_optional_type, TypeParameter, UnionParameter, TypeVarParameter,
-    is_subscripted_generic_type, is_generic_type, get_generic_arguments, get_generic_parameters, is_variadic_tuple_type
+    is_type, is_union, get_type_name, is_optional, get_optional_type, TypeParameter, UnionParameter, TypeVarParameter, AnyType,
+    is_subscripted_generic_type, is_generic_type, get_generic_arguments, get_generic_parameters, is_variadic_tuple_type, issubclass_typing
 )
 from typingutils.core.compat.typevar_tuple import TypeVarTuple
-from typingutils.internal import get_generic_origin, get_original_class, get_union_types, get_types_from_typevar, construct_generic_type
+from typingutils.core.types import ANNOTATIONS
+from typingutils.internal import get_generic_origin, get_original_class, get_union_types, get_types_from_typevar, construct_generic_type, construct_union
 from typingutils.core.attributes import ORIGIN
 
 from tests.testcase_generators.issubclass import create_testcases_for_issubclass
@@ -20,10 +23,16 @@ from tests.generic_classes import ParentClass, GenericClass1, GenericSubClass1, 
 issubclass_testcases = list(create_testcases_for_issubclass())
 types_testcases = list(create_testcases_for_types())
 
+TESTS_EXTENSIVE_DEBUGGING = getenv("TESTS_EXTENSIVE_DEBUGGING", "").lower() in ("1", "true")
+
 def test_is_type():
     tested: set[type[Any]] = set()
 
     assert not is_type(object)
+    assert not is_type(Any)
+
+    for cls in ANNOTATIONS:
+        assert not is_type(cls)
 
     for testcase in types_testcases:
 
@@ -31,7 +40,8 @@ def test_is_type():
             tested.add(testcase.cls)
 
             result = is_type(testcase.cls)
-            print(f"Testing is_type({get_type_name(testcase.cls)}) ==> {result}")
+            if TESTS_EXTENSIVE_DEBUGGING:
+                print(f"Testing is_type({get_type_name(testcase.cls)}) ==> {result}")
             if not result:
                 is_type(testcase.cls)
             assert result
@@ -46,15 +56,13 @@ def test_get_generic_parameters():
 
             result = get_generic_parameters(testcase.cls)
 
-            print(f"Testing get_generic_parameters({get_type_name(testcase.cls)}) ==> {result}")
+            if TESTS_EXTENSIVE_DEBUGGING:
+                print(f"Testing get_generic_parameters({get_type_name(testcase.cls)}) ==> {result}")
 
             if testcase.is_generic_type:
                 assert any(result)
             else:
                 assert not any(result)
-
-
-
 
 def test_get_generic_arguments():
     tested: set[type[Any]] = set()
@@ -65,7 +73,8 @@ def test_get_generic_arguments():
 
             result = get_generic_arguments(testcase.cls)
 
-            print(f"Testing get_generic_arguments({get_type_name(testcase.cls)}) ==> {result}")
+            if TESTS_EXTENSIVE_DEBUGGING:
+                print(f"Testing get_generic_arguments({get_type_name(testcase.cls)}) ==> {result}")
 
             if testcase.is_generic: # non-generic objects like types may still have generic arguments (values in __args__ attribute)
                 if not any(result):
@@ -87,17 +96,20 @@ def test_get_generic_origin():
 
             if testcase.is_generic:
                 origin = getattr(testcase.cls, ORIGIN)
-                print(f"Testing get_generic_origin({get_type_name(testcase.cls)}) ==> {get_type_name(result)}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing get_generic_origin({get_type_name(testcase.cls)}) ==> {get_type_name(result)}")
                 assert result == origin
 
             elif testcase.is_generic_type:
                 if hasattr(testcase.cls, ORIGIN): # python 3.10 always has the __orig__ attribute
                     origin = getattr(testcase.cls, ORIGIN)
-                    print(f"Testing get_generic_origin({get_type_name(testcase.cls)}) ==> {get_type_name(result)}")
+                    if TESTS_EXTENSIVE_DEBUGGING:
+                        print(f"Testing get_generic_origin({get_type_name(testcase.cls)}) ==> {get_type_name(result)}")
                     assert result == origin
             else:
                 result = get_generic_origin(testcase.cls)
-                print(f"Testing get_generic_origin({get_type_name(testcase.cls)}) ==> {get_type_name(result)}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing get_generic_origin({get_type_name(testcase.cls)}) ==> {get_type_name(result)}")
                 assert result == testcase.cls
 
 
@@ -105,7 +117,8 @@ def test_get_generic_origin():
         (str | int, UnionType),
     ):
         result = get_generic_origin(cls)
-        print(f"Testing get_generic_origin({get_generic_origin(cls)}) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing get_generic_origin({get_generic_origin(cls)}) ==> {result}")
         assert result == expected
 
     with assert_raises(ValueError):
@@ -129,11 +142,13 @@ def test_is_generic_type():
 
             if testcase.base_is_generic_type:
                 result = is_generic_type(testcase.base)
-                print(f"Testing is_generic_type({get_type_name(testcase.base)}) ==> {result}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing is_generic_type({get_type_name(testcase.base)}) ==> {result}")
                 assert result
             else:
                 result = is_generic_type(testcase.base)
-                print(f"Testing !is_generic_type({get_type_name(testcase.base)}) ==> {result}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing !is_generic_type({get_type_name(testcase.base)}) ==> {result}")
                 assert not result
 
 
@@ -142,11 +157,13 @@ def test_is_generic_type():
 
             if testcase.comparison_is_generic_type:
                 result = is_generic_type(testcase.comparison)
-                print(f"Testing is_generic_type({get_type_name(testcase.comparison)}) ==> {result}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing is_generic_type({get_type_name(testcase.comparison)}) ==> {result}")
                 assert result
             else:
                 result = is_generic_type(testcase.comparison)
-                print(f"Testing !is_generic_type({get_type_name(testcase.comparison)}) ==> {result}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing !is_generic_type({get_type_name(testcase.comparison)}) ==> {result}")
                 assert not result
 
 
@@ -163,10 +180,12 @@ def test_is_subscripted_generic_type():
             result = is_subscripted_generic_type(testcase.base)
 
             if testcase.base_is_subscripted_generic:
-                print(f"Testing is_subscripted_generic_type({get_type_name(testcase.base)}) ==> {result}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing is_subscripted_generic_type({get_type_name(testcase.base)}) ==> {result}")
                 assert result
             else:
-                print(f"Testing !is_subscripted_generic_type({get_type_name(testcase.base)}) ==> {result}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing !is_subscripted_generic_type({get_type_name(testcase.base)}) ==> {result}")
                 assert not result
 
 
@@ -176,10 +195,12 @@ def test_is_subscripted_generic_type():
             result = is_subscripted_generic_type(testcase.comparison)
 
             if testcase.base_is_subscripted_generic:
-                print(f"Testing is_generic({get_type_name(testcase.comparison)}) ==> {result}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing is_generic({get_type_name(testcase.comparison)}) ==> {result}")
                 assert result
             else:
-                print(f"Testing !is_generic({get_type_name(testcase.comparison)}) ==> {result}")
+                if TESTS_EXTENSIVE_DEBUGGING:
+                    print(f"Testing !is_generic({get_type_name(testcase.comparison)}) ==> {result}")
                 assert not result
 
 
@@ -198,13 +219,16 @@ def test_get_type_name():
             tested.add(cls)
             result = get_type_name(cls)
 
-            print(f"Testing get_type_name({get_type_name(cls)}) ==> {result}")
+            if TESTS_EXTENSIVE_DEBUGGING:
+                print(f"Testing get_type_name({get_type_name(cls)}) ==> {result}")
 
             assert len(result) > 0
             assert not result.startswith(".") or result == "..."
             assert not result.startswith("<class")
 
     for cls, expected in cast(tuple[tuple[TypeParameter|UnionParameter, str]], (
+        (object, "object"),
+        (type, "type"),
         (EllipsisType, "..."),
         (NoneType, "None"),
         (List[str], "typing.List[str]"),
@@ -218,7 +242,8 @@ def test_get_type_name():
         (ParentClass.ChildClass, "tests.generic_classes.ParentClass.ChildClass"),
     )):
         result = get_type_name(cls)
-        print(f"Testing get_type_name({get_type_name(cls)}) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing get_type_name({get_type_name(cls)}) ==> {result}")
         assert result == expected
 
     for cls in (
@@ -228,7 +253,8 @@ def test_get_type_name():
     ):
 
         result = get_type_name(cls)
-        print(f"Testing get_type_name({get_type_name(cls)}) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing get_type_name({get_type_name(cls)}) ==> {result}")
         assert result.startswith("~T")
 
 
@@ -244,8 +270,15 @@ def test_is_union():
         (int|str|None, True),
     )):
         result = is_union(cls)
-        print(f"Testing is_union({get_type_name(cls)}) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing is_union({get_type_name(cls)}) ==> {result}")
         assert result == expected
+
+    for cls in (*generic_types, *non_generic_types):
+        result = is_union(cls)
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing is_union({get_type_name(cls)}) ==> {result}")
+        assert not result
 
 
 def test_get_union_types():
@@ -258,7 +291,8 @@ def test_get_union_types():
         (int|str|None, (int, str)),
     )):
         result = get_union_types(cast(UnionParameter, cls))
-        print(f"Testing get_union_types({get_type_name(cls)}) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing get_union_types({get_type_name(cls)}) ==> {result}")
         assert result == expected
 
 
@@ -274,7 +308,8 @@ def test_is_optional():
         (str|int|None, True),
     )):
         result = is_optional(cls)
-        print(f"Testing is_optional({get_type_name(cls)}) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing is_optional({get_type_name(cls)}) ==> {result}")
         assert result == expected
 
 
@@ -291,7 +326,8 @@ def test_get_optional_type():
         (int|str|None, (int|str, True)),
     )):
         result = get_optional_type(cls)
-        print(f"Testing get_optional_type({get_type_name(cls)}) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing get_optional_type({get_type_name(cls)}) ==> {result}")
         assert result == expected
 
 def test_get_types_from_typevar():
@@ -304,7 +340,8 @@ def test_get_types_from_typevar():
         (TypeVarTuple("Tv1"), tuple[type[Any], ...]),
     )):
         result = get_types_from_typevar(typevar)
-        print(f"Testing get_types_from_typevar({get_type_name(typevar)}) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing get_types_from_typevar({get_type_name(typevar)}) ==> {result}")
         assert result == expected
 
 def test_construct_generic_type():
@@ -319,7 +356,8 @@ def test_construct_generic_type():
     )):
 
         result = construct_generic_type(cls, *types)
-        print(f"Testing construct_generic_type({get_type_name(cls)}, {', '.join((get_type_name(t) for t in types))}) ==> {result}")
+        if TESTS_EXTENSIVE_DEBUGGING:
+            print(f"Testing construct_generic_type({get_type_name(cls)}, {', '.join((get_type_name(t) for t in types))}) ==> {result}")
         assert result == expected
 
 
@@ -335,7 +373,19 @@ def test_is_variadic_tuple_type():
     assert not is_variadic_tuple_type(str) # pyright: ignore[reportArgumentType]
     assert not is_variadic_tuple_type(tuple[Any]) # pyright: ignore[reportArgumentType]
     assert not is_variadic_tuple_type(tuple[str, int])
-    assert not is_variadic_tuple_type(tuple[str, int, bool])
+    assert not is_variadic_tuple_type(Tuple[str, int, bool])
+    assert not is_variadic_tuple_type(Tuple[Any]) # pyright: ignore[reportArgumentType]
+    assert not is_variadic_tuple_type(Tuple[str, int])
+    assert not is_variadic_tuple_type(Tuple[str, int, bool])
     assert is_variadic_tuple_type(tuple[str, ...])
     assert is_variadic_tuple_type(tuple[int, ...])
     assert is_variadic_tuple_type(tuple[Any, ...])
+    assert is_variadic_tuple_type(Tuple[str, ...])
+    assert is_variadic_tuple_type(Tuple[int, ...])
+    assert is_variadic_tuple_type(Tuple[Any, ...])
+
+def test_construct_union():
+    assert issubclass_typing(construct_union((str, int, float)), str | int | float)
+    assert issubclass_typing(construct_union((str|int, float)), str | int | float)
+    assert issubclass_typing(construct_union((Union[str, int], float)), str | float | int)
+    assert issubclass_typing(construct_union((Optional[str], float)), str | float | None)
