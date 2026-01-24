@@ -478,7 +478,12 @@ def construct_union(types: tuple[AnyType, ...]) -> AnyType:
 
     for cls in types:
         if lastcls is not None:
-            lastcls = lastcls.__or__(cls) # pyright: ignore[reportUnknownVariableType, reportAssignmentType, reportUnknownMemberType, reportAttributeAccessIssue]
+            if isinstance(cls, (_GenericAlias, _SpecialGenericAlias, _UnionGenericAlias, _SpecialForm)):
+                lastcls = lastcls.__or__(cls) # pyright: ignore[reportUnknownVariableType, reportAssignmentType, reportUnknownMemberType, reportAttributeAccessIssue] pragma: no cover
+            elif isinstance(cls, GenericAlias):
+                lastcls = GenericAlias.__or__(cls, lastcls) # pragma: no cover
+            else:
+                lastcls = type.__or__(cls, lastcls)
         else:
             lastcls = cls
 
