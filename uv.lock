@@ -233,7 +233,7 @@ wheels = [
 name = "typing-utilities"
 source = { editable = "." }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
 ]
 
 [package.optional-dependencies]
@@ -246,6 +246,6 @@ test = [
 requires-dist = [
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=6.1" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11'", specifier = ">=4.13.2,<4.14" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'", specifier = ">=4.13.2,<5" },
 ]
 provides-extras = ["test"]
