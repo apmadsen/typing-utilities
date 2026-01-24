@@ -386,6 +386,8 @@ def test_is_variadic_tuple_type():
 
 def test_construct_union():
     assert issubclass_typing(construct_union((str, int, float)), str | int | float)
+    assert issubclass_typing(construct_union((str, int, float, NoneType)), str | int | float | None)
+    assert issubclass_typing(construct_union((str, int, float, None)), str | int | float | None) # pyright: ignore[reportArgumentType]
     assert issubclass_typing(construct_union((str|int, float)), str | int | float)
     assert issubclass_typing(construct_union((Union[str, int], float)), str | float | int)
     assert issubclass_typing(construct_union((Optional[str], float)), str | float | None)

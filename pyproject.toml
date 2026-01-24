@@ -28,7 +28,7 @@ classifiers = [
     "Typing :: Typed"
 ]
 dependencies = [
-    "typing_extensions >= 4.13.2, < 4.14; python_version < '3.13'"
+    "typing_extensions >= 4.13.2, < 5; python_version < '3.13'"
 ]
 requires-python = ">=3.10"
 
@@ -39,6 +39,7 @@ repository = "https://github.com/apmadsen/typing-utilities"
 test = [
     "pytest>=8.3",
     "pytest-cov>=6.1",
+    "tox"
 ]
 
 [tool.setuptools-git-versioning]

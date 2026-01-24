@@ -459,21 +459,34 @@ def construct_union(types: tuple[AnyType, ...]) -> AnyType:
             if is_optional(cls):
                 yield from get_union_types(cast(UnionParameter, cls))
                 yield NoneType
+            elif cls is None: # implicitly convert None to NoneType # pyright: ignore[reportUnnecessaryComparison]
+                yield NoneType
             elif is_union(cls):
                 yield from get_union_types(cast(UnionParameter, cls))
             else:
                 yield cls
 
-    types = tuple(set(tuple(extract_types(types))))
+    types_set = set(tuple(extract_types(types)))
 
-    if any( cls for cls in types if isinstance(cls, GenericAlias) ):
-        return cast(type, Union[tuple(types)])
+    if has_none := NoneType in types:
+        types_set.remove(NoneType)
 
-    for cls in reversed(types):
+    types = tuple(types_set)
+
+    if has_none:
+        types = (NoneType, *reversed(types)) # make sure that "None" is always last
+
+    for cls in types:
         if lastcls is not None:
-            lastcls = type.__or__(cls, lastcls) # pyright: ignore[reportArgumentType]
+            if isinstance(cls, (_GenericAlias, _SpecialGenericAlias, _UnionGenericAlias, _SpecialForm)):
+                lastcls = lastcls.__or__(cls) # pyright: ignore[reportUnknownVariableType, reportAssignmentType, reportUnknownMemberType, reportAttributeAccessIssue] pragma: no cover
+            elif isinstance(cls, GenericAlias):
+                lastcls = GenericAlias.__or__(cls, lastcls) # pragma: no cover
+            else:
+                lastcls = type.__or__(cls, lastcls)
         else:
             lastcls = cls
+
     return cast(AnyType, lastcls)
 
 def construct_generic_type(cls: type, *generic_arguments: AnyType | EllipsisType) -> type:

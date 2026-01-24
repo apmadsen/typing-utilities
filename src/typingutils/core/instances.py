@@ -238,7 +238,7 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
 
     if isinstance(cls, tuple):
         for cls1 in cls:
-            if isinstance_typing(obj, cls1):
+            if isinstance_typing(obj, cls1, recursive = recursive):
                 return True
         return False
 
@@ -248,7 +248,7 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
         return False # only other types are derived from type object
     if get_generic_origin(cast(type, cls)) is Union:
         for cls1 in getattr(cls, ARGS):
-            if isinstance_typing(obj, cls1):
+            if isinstance_typing(obj, cls1, recursive = recursive):
                 return True
         return False
     if issubclass_typing(type(obj), cast(type, cls)): # pyright: ignore[reportUnknownArgumentType]
@@ -278,7 +278,7 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
 
     elif isinstance(cls, TypeVar):
         from typingutils.core.types import get_types_from_typevar
-        return isinstance_typing(obj, get_types_from_typevar(cls))
+        return isinstance_typing(obj, get_types_from_typevar(cls), recursive = recursive)
 
     if recursive and cls_args:
         if issubclass(cls_origin, tuple) and isinstance(obj, abc.Sequence):
@@ -303,32 +303,32 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
                 else:
                     return False
 
-        elif issubclass(cls_origin, abc.Sequence) and isinstance(obj, abc.Sequence) and isinstance_typing(obj, cast(type[Any], cls_origin)):
+        elif issubclass(cls_origin, abc.Sequence) and isinstance(obj, abc.Sequence) and isinstance_typing(obj, cast(type[Any], cls_origin), recursive = recursive):
             for item in cast(abc.Sequence[Any], obj):
-                if not isinstance_typing(item, cls_args[0]):
+                if not isinstance_typing(item, cls_args[0], recursive = recursive):
                     return False
             return True
 
-        if issubclass(cls_origin, abc.Mapping) and isinstance(obj, abc.Mapping) and isinstance_typing(obj, cast(type[Any], cls_origin)):
+        if issubclass(cls_origin, abc.Mapping) and isinstance(obj, abc.Mapping) and isinstance_typing(obj, cast(type[Any], cls_origin), recursive = recursive):
             for key in cast(abc.Mapping[Any, Any], obj):
-                if not isinstance_typing(key, cls_args[0]):
+                if not isinstance_typing(key, cls_args[0], recursive = recursive):
                     return False
-                if not isinstance_typing(obj[key], cls_args[1]):
+                if not isinstance_typing(obj[key], cls_args[1], recursive = recursive):
                     return False
             return True
 
-        if issubclass(cls_origin, abc.Set) and isinstance(obj, abc.Set) and isinstance_typing(obj, cast(type[Any], cls_origin)):
+        if issubclass(cls_origin, abc.Set) and isinstance(obj, abc.Set) and isinstance_typing(obj, cast(type[Any], cls_origin), recursive = recursive):
             for item in cast(abc.Set[Any], obj):
-                if not isinstance_typing(item, cls_args[0]):
+                if not isinstance_typing(item, cls_args[0], recursive = recursive):
                     return False
             return True
 
 
-        if issubclass(cls_origin, abc.Iterable) and isinstance(obj, abc.Iterable) and isinstance_typing(obj, cast(type[Any], cls_origin)):
+        if issubclass(cls_origin, abc.Iterable) and isinstance(obj, abc.Iterable) and isinstance_typing(obj, cast(type[Any], cls_origin), recursive = recursive):
             if isinstance_typing(obj, abc.Iterator):
-                raise Exception("Recursive instance checks on iterators cannot be done at it would deplete the iterator for further use")
+                raise Exception("Recursive instance checks on iterators cannot be done as it would deplete the iterator for further use")
             for item in cast(abc.Iterable[Any], obj):
-                if not isinstance_typing(item, cls_args[0]):
+                if not isinstance_typing(item, cls_args[0], recursive = recursive):
                     return False
             return True
 
