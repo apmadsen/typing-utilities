@@ -41,4 +41,4 @@ unions: List[UnionType] = [
     str | int,
     Optional[str],
     Optional[Union[int, bool]]
-]
+] # pyright: ignore[reportAssignmentType]

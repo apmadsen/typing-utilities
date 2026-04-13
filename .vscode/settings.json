@@ -1,13 +1,5 @@
 {
     "python.envFile": "${workspaceFolder}/.env",
-    "testing.coverageBarThresholds": {
-        "red": 0,
-        "yellow": 60,
-        "green": 90
-    },
-    "testing.coverageToolbarEnabled": true,
-    "testing.showCoverageInExplorer": true,
-    "testing.displayedCoveragePercent": "totalCoverage",
     "python.testing.pytestEnabled": true,
     "python.testing.pytestArgs": [
         "-v",
@@ -16,17 +8,10 @@
         "tests/"
     ],
     "python.testing.unittestEnabled": false,
-    "python.globalModuleInstallation": true,
+    "python.globalModuleInstallation": false,
     "files.watcherExclude": {
         ".git/**": true
     },
-    "python.testing.unittestArgs": [
-        "-v",
-        "-s",
-        "./tests",
-        "-p",
-        "test*.py"
-    ],
     "python.analysis.typeCheckingMode": "strict",
     "python.analysis.autoSearchPaths": true,
     "python.analysis.diagnosticMode": "workspace",
