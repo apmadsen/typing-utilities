@@ -215,7 +215,7 @@ def get_generic_origin(cls: AnyType) -> TypeParameter:
     elif hasattr(cls, ORIGIN):
         return cast(type, getattr(cls, ORIGIN))
     elif isinstance(cls, UnionType):
-        return UnionType # pyright: ignore[reportReturnType]
+        return UnionType # pyright: ignore[reportReturnType] # pragma: no cover
 
     return cast(type, cls)
 
