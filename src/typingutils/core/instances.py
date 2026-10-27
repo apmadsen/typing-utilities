@@ -1,15 +1,39 @@
-from typing import Callable, Type, TypeVar, Any, Union, NamedTuple, Literal, Annotated, overload, cast
-from typing import _SpecialForm, _GenericAlias, _AnnotatedAlias # pyright: ignore[reportUnknownVariableType, reportAttributeAccessIssue, reportPrivateUsage]
-from types import UnionType, NoneType
 from collections import abc
 from inspect import stack as get_stack
-
-from typingutils.core.compat.annotations import LiteralString
-from typingutils.core.attributes import  ORIGIN, ORIGINAL_CLASS, ARGS, TYPE_PARAMS
-from typingutils.core.types import (
-    TypeParameter, TypeVarParameter, UnionParameter, AnyType, SetOfAny, TypeArgs, is_variadic_tuple_type,
-    is_subscripted_generic_type, is_generic_type, get_generic_origin, issubclass_typing, ANNOTATIONS
+from types import NoneType, UnionType
+from typing import (  # noqa: UP035
+    Annotated,
+    Any,
+    Literal,
+    LiteralString,
+    NamedTuple,
+    Type,
+    TypeVar,
+    Union,
+    _AnnotatedAlias,  # pyright: ignore[reportAttributeAccessIssue, reportUnknownVariableType]
+    _GenericAlias,  # pyright: ignore[reportAttributeAccessIssue, reportUnknownVariableType]
+    _SpecialForm,  # pyright: ignore[reportPrivateUsage]
+    cast,
+    overload,
 )
+
+from typingutils.core.attributes import ARGS, ORIGIN, ORIGINAL_CLASS, TYPE_PARAMS
+from typingutils.core.type_exception import TypeException
+from typingutils.core.types import (
+    ANNOTATIONS,
+    AnyType,
+    SetOfAny,
+    TypeArgs,
+    TypeParameter,
+    TypeVarParameter,
+    UnionParameter,
+    get_generic_origin,
+    is_generic_type,
+    is_subscripted_generic_type,
+    is_variadic_tuple_type,
+    issubclass_typing,
+)
+
 
 class TypeCheck(NamedTuple):
     is_type: bool
@@ -133,11 +157,11 @@ def get_generic_arguments(obj: Any) -> TypeArgs:
     elif not is_type(obj):
         orig_class = get_original_class(obj)
         if orig_class is not type(obj):
-            return cast(Callable[[Any], tuple[type, ...]], get_generic_arguments)(orig_class)
+            return cast(abc.Callable[[Any], tuple[type, ...]], get_generic_arguments)(orig_class)
     elif isinstance(obj, type) and is_generic_type(obj):
         orig_class = get_original_class(obj)
         if orig_class != obj:
-            return cast(Callable[[Any], tuple[type, ...]], get_generic_arguments)(orig_class)
+            return cast(abc.Callable[[Any], tuple[type, ...]], get_generic_arguments)(orig_class)
 
 
     return ()
@@ -156,13 +180,7 @@ def is_type(obj: Any) -> bool:
         bool: A boolean value indicating if object is a type.
     """
 
-    if type(obj) is TypeVar:
-        return False
-    elif obj is object:
-        return False
-    elif obj is Any:
-        return False
-    elif obj in ANNOTATIONS:
+    if type(obj) is TypeVar or obj in (object, Any, *ANNOTATIONS):
         return False
     elif isinstance(obj, UnionType) or get_generic_origin(obj) == Union:
         return True
@@ -199,7 +217,6 @@ def isinstance_typing(obj: Any) -> bool:
     Returns:
         bool: A boolean value indicating if object is an instance of an object or not.
     """
-    ...
 @overload
 def isinstance_typing(obj: Any, cls: AnyType | TypeArgs, *, recursive: bool = False) -> bool:
     """
@@ -213,7 +230,6 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs, *, recursive: bool = Fa
     Returns:
         bool: A boolean value indicating if object is an instance of the specified type/types.
     """
-    ...
 def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recursive: bool = False) -> bool:
     obj_is_type = is_type(obj)
 
@@ -227,13 +243,13 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
         return False
     elif obj is cls:
         return False # an object is never an instance of itself (unless it is object - see previous line)
-    elif obj is type and cls in (object, type[Any], Type, Type[Any]):
+    elif obj is type and cls in (object, type[Any], Type, Type[Any]):  # noqa: UP006
         return True # types are only derived from object and type[Any]
-    elif type(obj) is type and cls in (object, type, type[Any], Type, Type[Any]):
+    elif type(obj) is type and cls in (object, type, type[Any], Type, Type[Any]):  # noqa: UP006
         return True # all classes are derived from type and object
-    elif type(obj) is not type and cls in (object, type[Any], Type[Any]):
+    elif type(obj) is not type and cls in (object, type[Any], Type[Any]):  # noqa: UP006
         return True # all class instances are derived from type and object
-    elif type(obj) is NoneType and cls in (object, type[Any], Type[Any], NoneType):
+    elif type(obj) is NoneType and cls in (object, type[Any], Type[Any], NoneType):  # noqa: UP006
         return True # None is derived from type and object
 
     if isinstance(cls, tuple):
@@ -269,9 +285,8 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
         if origin == cls:
             return True
 
-    if not obj_has_orig_cls_attr and cls_has_origin_attr and cls_has_args_attr and set(get_generic_arguments(cls)) == SetOfAny:
-       if cls_origin is not tuple:
-            cls = cls_origin
+    if not obj_has_orig_cls_attr and cls_has_origin_attr and cls_has_args_attr and set(get_generic_arguments(cls)) == SetOfAny and cls_origin is not tuple:
+        cls = cls_origin
 
     if not is_subscripted_generic_type(cast(TypeParameter | UnionParameter, cls)) and not is_generic_type(cast(TypeParameter, type(obj))):
         return isinstance(obj, cast(type, cls))
@@ -287,21 +302,16 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
             elif not is_variadic_tuple_type(cast(type[tuple[Any]], cls)):
                 if set(cls_args) == SetOfAny:
                     return len(cast(abc.Sized, obj)) == 1
-                elif len(cast(abc.Sized, obj)) == len(cls_args) and not [
-                    t for t in zip(cast(abc.Sequence[Any], obj), cls_args)
-                    if not isinstance_typing(t[0], t[1], recursive = recursive)
-                ]:
-                    return True
                 else:
-                    return False
+                    return len(cast(abc.Sized, obj)) == len(cls_args) and not [
+                        t for t in zip(cast(abc.Sequence[Any], obj), cls_args)
+                        if not isinstance_typing(t[0], t[1], recursive = recursive)
+                    ]
             else:
-                if not [
+                return not [
                     t for t in zip(cast(abc.Sequence[Any], obj), cls_args[0:-1])
                     if not isinstance_typing(t[0], t[1], recursive = recursive)
-                ]:
-                    return True
-                else:
-                    return False
+                ]
 
         elif issubclass(cls_origin, abc.Sequence) and isinstance(obj, abc.Sequence) and isinstance_typing(obj, cast(type[Any], cls_origin), recursive = recursive):
             for item in cast(abc.Sequence[Any], obj):
@@ -326,7 +336,7 @@ def isinstance_typing(obj: Any, cls: AnyType | TypeArgs | None = None, *, recurs
 
         if issubclass(cls_origin, abc.Iterable) and isinstance(obj, abc.Iterable) and isinstance_typing(obj, cast(type[Any], cls_origin), recursive = recursive):
             if isinstance_typing(obj, abc.Iterator):
-                raise Exception("Recursive instance checks on iterators cannot be done as it would deplete the iterator for further use")
+                raise TypeException("Recursive instance checks on iterators cannot be done as it would deplete the iterator for further use")
             for item in cast(abc.Iterable[Any], obj):
                 if not isinstance_typing(item, cls_args[0], recursive = recursive):
                     return False
@@ -400,7 +410,7 @@ def resolve_annotation(obj: AnyType | Annotated[Any, "any"]) -> AnyType:
                 args = getattr(obj, ARGS)
 
                 if origin is Literal:
-                    types: tuple[type[Any], ...] = tuple(set([ type(arg) for arg in args ])) # pyright: ignore[reportUnknownArgumentType]
+                    types: tuple[type[Any], ...] = tuple({ type(arg) for arg in args }) # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType]
                     return types[0] if len(types) == 1 else construct_union(types)
                 else:
                     types: tuple[type[Any], ...] = tuple(set(args))

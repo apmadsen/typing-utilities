@@ -2,7 +2,8 @@
 # ruff: noqa
 from typing import (
     Generic, Tuple, Dict, Optional, Union, Any, Literal, Annotated, cast,
-    ClassVar, Final, TypeAlias
+    ClassVar, Final, TypeAlias, Required, NotRequired, LiteralString, Unpack,
+    LiteralString
 )
 from datetime import date, time, datetime
 from pytest import raises as assert_raises
@@ -11,8 +12,7 @@ from os import getenv
 from typingutils import isinstance_typing, issubclass_typing, get_generic_arguments, get_generic_parameters, is_literal, is_annotated_type, resolve_annotation, get_type_name
 from typingutils.internal import get_original_class
 from typingutils.core.types import ANNOTATIONS
-from typingutils.core.compat.annotations import ReadOnly, Required, NotRequired, LiteralString, Unpack
-from typingutils.core.compat.annotations import LiteralString
+from typingutils.core.compat.annotations import ReadOnly
 
 from tests.generic_classes import NormalClass, GenericClass1, T, T1, T2
 from tests.generic_types import non_generic_types, generic_types

@@ -1,0 +1,3 @@
+
+class TypeException(Exception):
+    pass

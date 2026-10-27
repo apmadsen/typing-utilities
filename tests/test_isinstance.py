@@ -1,7 +1,7 @@
 # pyright: basic
 # ruff: noqa
 from typing import (
-    Any, Sequence, MutableSequence, List, Mapping, MutableMapping, Dict, Deque,
+    Any, Sequence, MutableSequence, List, LiteralString, Mapping, MutableMapping, Dict, Deque,
     Set, Tuple, DefaultDict, OrderedDict as OrderedDict_, FrozenSet, Type, Iterable, cast
 )
 from os import getenv
@@ -12,7 +12,6 @@ from types import NoneType
 from pytest import raises as assert_raises, fixture
 
 from typingutils import TypeParameter, UnionParameter, AnyType, get_type_name, isinstance_typing, is_type
-from typingutils.core.compat.annotations import LiteralString
 from tests.other_impl.isinstance import comparison_generator
 
 TESTS_EXTENSIVE_DEBUGGING = getenv("TESTS_EXTENSIVE_DEBUGGING", "").lower() in ("1", "true")

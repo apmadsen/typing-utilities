@@ -3,6 +3,7 @@ from inspect import stack as get_stack
 from typingutils.core.attributes import TYPE_PARAMS
 from typingutils.core.types import AnyFunction
 
+
 def is_generic_function(fn: AnyFunction) -> bool:
     """
     Python 3.12 or newer.
@@ -17,7 +18,7 @@ def is_generic_function(fn: AnyFunction) -> bool:
     """
 
     if hasattr(fn, TYPE_PARAMS):
-        from typingutils.core.instances import _extract_args # pyright: ignore[reportPrivateUsage]
+        from typingutils.core.instances import _extract_args  # pyright: ignore[reportPrivateUsage]
         params, *_ = _extract_args(fn)
         if params is not None and any(params):
             return True
