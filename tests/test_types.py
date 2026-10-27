@@ -1,6 +1,6 @@
 # pyright: basic
 # ruff: noqa
-from typing import Any, Generic, TypeVar, Union, Optional, List, Dict, Tuple, Literal, cast
+from typing import Any, Generic, TypeVar, Union, Optional, List, Dict, Tuple, TypeVarTuple, Literal, Unpack, cast
 from types import NoneType, EllipsisType, UnionType
 from pytest import raises as assert_raises
 from os import getenv
@@ -9,7 +9,6 @@ from typingutils import (
     is_type, is_union, get_type_name, is_optional, get_optional_type, TypeParameter, UnionParameter, TypeVarParameter, AnyType,
     is_subscripted_generic_type, is_generic_type, get_generic_arguments, get_generic_parameters, is_variadic_tuple_type, issubclass_typing
 )
-from typingutils.core.compat.typevar_tuple import TypeVarTuple
 from typingutils.core.types import ANNOTATIONS
 from typingutils.internal import get_generic_origin, get_original_class, get_union_types, get_types_from_typevar, construct_generic_type, construct_union
 from typingutils.core.attributes import ORIGIN
@@ -391,3 +390,20 @@ def test_construct_union():
     assert issubclass_typing(construct_union((str|int, float)), str | int | float)
     assert issubclass_typing(construct_union((Union[str, int], float)), str | float | int)
     assert issubclass_typing(construct_union((Optional[str], float)), str | float | None)
+
+
+def test_typevar_tuples():
+
+    Ts = TypeVarTuple("Ts")
+
+    class Class1(Generic[Unpack[Ts]]):
+        pass
+
+    assert get_types_from_typevar(Ts) == tuple[type[Any], ...]
+
+    assert get_type_name(Ts) == "*Ts"
+
+    inst = Class1[int, str, bool]
+
+    assert get_generic_parameters(Class1) == (Ts,)
+    assert get_generic_arguments(inst) == (int, str, bool)
